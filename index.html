@@ -5,16 +5,18 @@
     <title>Lineman Training Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
     <style> 
-        body { margin: 0; background: linear-gradient(to bottom, #87CEEB 0%, #FFE4B5 100%); overflow: hidden; font-family: Arial; }
+        body { margin: 0; background: #87CEEB; overflow: hidden; font-family: Arial; }
         .btn { position: absolute; bottom: 100px; width: 90px; height: 90px; background: rgba(255,69,0,0.8); border-radius: 50%; color: white; font-size: 45px; text-align: center; line-height: 90px; user-select: none; border: 3px solid #fff; }
         #btnUp { left: 25%; } #btnDown { right: 25%; }
         #ui { position: absolute; top: 10px; width: 100%; text-align: center; color: #FF4500; font-size: 18px; font-weight: bold; background: rgba(255,255,255,0.9); padding: 10px; }
-        #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(255,69,0,0.95); color: white; padding: 25px; border-radius: 20px; text-align: center; display: none; width: 85%; }
+        #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(0,0,0,0.9); color: white; padding: 25px; border-radius: 20px; text-align: center; display: none; width: 85%; }
+        #donateBtn { position: absolute; bottom: 10px; width: 100%; text-align: center; }
+        #donateBtn button { background: #00A651; color: white; border: none; padding: 12px 25px; font-size: 16px; border-radius: 25px; font-weight: bold; }
     </style>
 </head>
 <body>
 <div id="ui">
-    <div>LINEMAN TRAINING PRO v2</div>
+    <div>LINEMAN TRAINING PRO</div>
     Level: 1 | Score: 0 | Height: 0m
 </div>
 <div id="btnUp" class="btn">↑</div>
@@ -23,7 +25,11 @@
 <div id="gameOver">
     <h2>GAME OVER!</h2>
     <p id="finalScore">Score: 0</p>
-    <button onclick="location.reload()" style="padding:10px 20px; font-size:18px;">Play Again</button>
+    <button onclick="location.reload()" style="padding:10px 20px; font-size:18px; background:#FF4500; color:white; border:none; border-radius:10px;">Play Again</button>
+</div>
+
+<div id="donateBtn">
+    <button onclick="alert('Support the Game\nM-Pesa: 0707 649 890\nThank You! 🙏')">Support 50/-</button>
 </div>
 
 <script>
@@ -40,13 +46,16 @@ let player, poles = [], birds = [], height = 0, score = 0, level = 1, upPressed 
 const game = new Phaser.Game(config);
 
 function create() {
-    // POLES - Brown rectangles
+    // SKY
+    this.add.rectangle(window.innerWidth/2, window.innerHeight/2, window.innerWidth, window.innerHeight, 0x87CEEB);
+    
+    // POLES - Brown
     for(let i = 0; i < 5; i++){
-        let pole = this.add.rectangle(150 + i * 200, window.innerHeight - 120, 30, 300, 0x8B4513);
-        this.add.rectangle(150 + i * 200, window.innerHeight - 270, 100, 5, 0x000);
+        this.add.rectangle(150 + i * 200, window.innerHeight - 120, 30, 300, 0x8B4513);
+        this.add.rectangle(150 + i * 200, window.innerHeight - 270, 120, 6, 0x000); // wires
     }
     
-    // LINEMAN - Red rectangle + Yellow circle helmet
+    // LINEMAN - Red body + Yellow helmet
     player = this.add.rectangle(window.innerWidth / 2, window.innerHeight - 100, 30, 50, 0xFF0000);
     this.add.circle(window.innerWidth / 2, window.innerHeight - 130, 12, 0xFFD700);
     this.physics.add.existing(player);
@@ -75,4 +84,25 @@ function update() {
     }
     if (downPressed && player.y < window.innerHeight - 100) player.y += speed;
 
-    birds.for
+    birds.forEach(bird => {
+        bird.x += bird.body.velocity.x * 0.016;
+        if(bird.x < -50) bird.x = window.innerWidth + 50;
+        if(Phaser.Geom.Intersects.RectangleToRectangle(player.getBounds(), bird.getBounds())){
+            gameOver(this);
+        }
+    });
+
+    if(score > level * 400){ level++; }
+    if(height < 0){ gameOver(this); }
+
+    document.getElementById('ui').innerHTML = `<div>LINEMAN TRAINING PRO</div>Level: ${level} | Score: ${score} | Height: ${Math.floor(height)}m`;
+}
+
+function gameOver(scene){
+    document.getElementById('gameOver').style.display = 'block';
+    document.getElementById('finalScore').innerText = `Final Score: ${score} | Level: ${level}`;
+    scene.scene.pause();
+}
+</script>
+</body>
+</html>
