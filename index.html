@@ -70,7 +70,7 @@ function preload() {}
 
 function create() {
     // PLAYER - YELLOW SQUARE
-    player = this.physics.add.rectangle(100, 300, 40, 40, 0xffff00);
+    player = this.physics.add.rectangle(100, 300, 40, 40, 0xffff00).setOrigin(0.5);
     player.body.setCollideWorldBounds(true);
 
     // MOBILE BUTTONS
