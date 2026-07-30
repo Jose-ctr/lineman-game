@@ -2,107 +2,92 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Lineman Training Pro</title>
+    <title>KPLC Lineman Training</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
     <style> 
-        body { margin: 0; background: #87CEEB; overflow: hidden; font-family: Arial; }
-        .btn { position: absolute; bottom: 100px; width: 80px; height: 80px; background: rgba(0,0,0,0.5); border-radius: 50%; color: white; font-size: 40px; text-align: center; line-height: 80px; user-select: none; }
-        #btnUp { left: 30%; transform: translateX(-50%); }
-        #btnDown { right: 30%; transform: translateX(50%); }
-        #ui { position: absolute; top: 20px; width: 100%; text-align: center; color: #000; font-size: 16px; font-weight: bold; }
-        #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(0,0,0,0.9); color: white; padding: 30px; border-radius: 20px; text-align: center; display: none; }
+        body { margin: 0; background: linear-gradient(to bottom, #87CEEB 0%, #FFE4B5 100%); overflow: hidden; font-family: Arial; }
+        .btn { position: absolute; bottom: 100px; width: 90px; height: 90px; background: rgba(0,51,102,0.8); border-radius: 50%; color: white; font-size: 45px; text-align: center; line-height: 90px; user-select: none; border: 3px solid #FFD700; }
+        #btnUp { left: 25%; } #btnDown { right: 25%; }
+        #ui { position: absolute; top: 10px; width: 100%; text-align: center; color: #003366; font-size: 18px; font-weight: bold; background: rgba(255,255,255,0.8); padding: 10px; }
+        #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(0,51,102,0.95); color: white; padding: 25px; border-radius: 20px; text-align: center; display: none; width: 85%; border: 3px solid #FFD700; }
         #donateBtn { position: absolute; bottom: 10px; width: 100%; text-align: center; }
-        #donateBtn button { background: #00A651; color: white; border: none; padding: 10px 20px; font-size: 14px; border-radius: 25px; font-weight: bold; margin: 3px; }
-        #shareBtn { background: #25D366 !important; }
-        #skinBtn { position: absolute; top: 60px; width: 100%; text-align: center; }
-        #skinBtn button { background: #FFA500; color: white; border: none; padding: 8px 15px; border-radius: 20px; margin: 3px; }
-        .powerup { font-size: 30px; }
+        #donateBtn button { background: #00A651; color: white; border: none; padding: 12px 25px; font-size: 16px; border-radius: 25px; font-weight: bold; }
+        .kplc-title { color: #FFD700; font-size: 14px; }
     </style>
 </head>
 <body>
-<div id="ui">Level: 1 | Score: 0 | Height: 0m | Best: 0</div>
-
-<div id="skinBtn">
-    <button onclick="changeSkin(0xFF0000)">Red</button>
-    <button onclick="changeSkin(0x0000FF)">Blue</button>
-    <button onclick="changeSkin(0x00FF00)">Green</button>
+<div id="ui">
+    <div class="kplc-title">KPLC LINEMAN TRAINING</div>
+    Level: 1 | Score: 0 | Height: 0m
 </div>
-
 <div id="btnUp" class="btn">↑</div>
 <div id="btnDown" class="btn">↓</div>
 
 <div id="gameOver">
-    <h2>GAME OVER!</h2>
+    <h2>SAFETY FIRST!</h2>
     <p id="finalScore">Score: 0</p>
-    <p id="bestScore">Best: 0</p>
-    <button onclick="location.reload()" style="padding:10px 20px; font-size:18px;">Play Again</button>
+    <button onclick="location.reload()" style="padding:10px 20px; font-size:18px; background:#FFD700; color:#003366; border:none; border-radius:10px;">Play Again</button>
 </div>
 
 <div id="donateBtn">
-    <button onclick="alert('Send Support to M-Pesa: 0707 649 890\nAsante! 🙏')">Support 50/-</button>
-    <button id="shareBtn" onclick="shareGame()">Share Game</button>
+    <button onclick="alert('Support KPLC Lineman Game\nM-Pesa: 0707 649 890\nAsante Sana! 🙏')">Support 50/-</button>
 </div>
-
-<audio id="climbSound" src="https://cdn.pixabay.com/audio/1/1/climbing-1.mp3"></audio>
-<audio id="gameOverSound" src="https://cdn.pixabay.com/audio/1/1/game-over-1.mp3"></audio>
-<audio id="powerSound" src="https://cdn.pixabay.com/audio/1/1/power-up-1.mp3"></audio>
 
 <script>
 const config = {
     type: Phaser.AUTO,
     width: window.innerWidth,
     height: window.innerHeight,
-    backgroundColor: '#87CEEB',
     physics: { default: 'arcade' },
-    scene: { create, update }
+    scene: { preload, create, update }
 };
 
-let player, height = 0, score = 0, level = 1, upPressed = false, downPressed = false;
-let poles = [], birds = [], powerups = [], bestScore = 0, playerColor = 0xFF0000, speedBoost = 1;
+let player, poles = [], birds = [], height = 0, score = 0, level = 1, upPressed = false, downPressed = false;
 const game = new Phaser.Game(config);
 
+function preload() {
+    this.load.image('pole', 'pole.png');
+    this.load.image('lineman', 'lineman.png');
+    this.load.image('bird', 'bird.png');
+}
+
 function create() {
-    bestScore = localStorage.getItem('linemanBest') || 0;
-    
+    // 5 REAL KENYAN POLES
     for(let i = 0; i < 5; i++){
-        let pole = this.add.rectangle(150 + i * 180, window.innerHeight - 200, 30, 300, 0x8B4513);
+        let pole = this.add.image(150 + i * 200, window.innerHeight - 120, 'pole');
+        pole.setScale(0.4);
         poles.push(pole);
     }
     
-    player = this.add.rectangle(window.innerWidth / 2, window.innerHeight - 50, 30, 50, playerColor);
+    // REAL KPLC LINEMAN
+    player = this.add.image(window.innerWidth / 2, window.innerHeight - 100, 'lineman');
+    player.setScale(0.18);
     this.physics.add.existing(player);
 
-    for(let i = 0; i < 3; i++){
-        let bird = this.add.triangle(200 + i * 250, 200 + i * 100, 0, 20, 20, 0, 10, 20, 0x000);
+    // BIRDS TO DODGE
+    for(let i = 0; i < 4; i++){
+        let bird = this.add.image(200 + i * 220, 180 + i * 80, 'bird');
+        bird.setScale(0.12);
         this.physics.add.existing(bird);
-        bird.body.velocity.x = -100 - level * 20;
-        birds.push(bird);
+        bird.body.velocity.x = -130 - level * 25;
     }
 
-    // POWER-UPS: Lightning = Speed, Coffee = Double Score
-    for(let i = 0; i < 2; i++){
-        let type = Phaser.Math.Between(0,1) ? '⚡' : '☕';
-        let p = this.add.text(Phaser.Math.Between(100, window.innerWidth-100), Phaser.Math.Between(150, 400), type, {fontSize: '30px'});
-        this.physics.add.existing(p);
-        p.type = type;
-        powerups.push(p);
-    }
-
-    document.getElementById('btnUp').ontouchstart = () => { upPressed = true; document.getElementById('climbSound').play(); }
-    document.getElementById('btnUp').ontouchend = () => { upPressed = false; document.getElementById('climbSound').pause(); }
+    // Touch controls
+    document.getElementById('btnUp').ontouchstart = () => upPressed = true;
+    document.getElementById('btnUp').ontouchend = () => upPressed = false;
     document.getElementById('btnDown').ontouchstart = () => downPressed = true;
     document.getElementById('btnDown').ontouchend = () => downPressed = false;
 }
 
 function update() {
-    let speed = (2 + level * 0.5) * speedBoost;
+    let speed = 2.5 + level * 0.6;
     
-    if (upPressed && player.y > 100) {
+    if (upPressed && player.y > 120) {
         player.y -= speed;
-        height += 0.2;
-        score += 1 * (speedBoost > 1 ? 2 : 1); // Coffee doubles score
+        height += 0.3;
+        score += 2;
     }
-    if (downPressed && player.y < window.innerHeight - 50) player.y += speed;
+    if (downPressed && player.y < window.innerHeight - 100) player.y += speed;
 
     birds.forEach(bird => {
         bird.x += bird.body.velocity.x * 0.016;
@@ -112,44 +97,16 @@ function update() {
         }
     });
 
-    // POWER-UP COLLECTION
-    powerups.forEach(p => {
-        p.y += 1;
-        if(p.y > window.innerHeight) p.y = 100;
-        if(Phaser.Geom.Intersects.RectangleToRectangle(player.getBounds(), p.getBounds())){
-            document.getElementById('powerSound').play();
-            if(p.type == '⚡'){ speedBoost = 2; setTimeout(()=>speedBoost=1, 3000); } // 3 sec speed
-            if(p.type == '☕'){ score += 100; }
-            p.y = -100; // remove it
-        }
-    });
-
-    if(score > level * 500){ level++; }
+    if(score > level * 400){ level++; }
     if(height < 0){ gameOver(this); }
 
-    document.getElementById('ui').innerText = `Level: ${level} | Score: ${score} | Height: ${Math.floor(height)}m | Best: ${bestScore}`;
+    document.getElementById('ui').innerHTML = `<div class="kplc-title">KPLC LINEMAN TRAINING</div>Level: ${level} | Score: ${score} | Height: ${Math.floor(height)}m`;
 }
 
 function gameOver(scene){
-    document.getElementById('gameOverSound').play();
-    if(score > bestScore){
-        bestScore = score;
-        localStorage.setItem('linemanBest', bestScore);
-    }
     document.getElementById('gameOver').style.display = 'block';
-    document.getElementById('finalScore').innerText = `Final Score: ${score} | Level: ${level}`;
-    document.getElementById('bestScore').innerText = `Best Score: ${bestScore}`;
+    document.getElementById('finalScore').innerText = `Final Score: ${score} | Level Reached: ${level}`;
     scene.scene.pause();
-}
-
-function changeSkin(color){
-    playerColor = color;
-    player.fillColor = color;
-}
-
-function shareGame(){
-    const text = `Play Lineman Training Pro! My best is ${bestScore}. Can you beat me? 🔥 https://jose-ctr.github.io/lineman-game/`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
 }
 </script>
 </body>
