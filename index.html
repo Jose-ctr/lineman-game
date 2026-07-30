@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Lineman Training</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <style> 
+        body { margin: 0; background: #87CEEB; overflow: hidden; }
+        .btn { position: absolute; bottom: 40px; width: 80px; height: 80px; background: rgba(0,0,0,0.4); border-radius: 50%; color: white; font-size: 40px; text-align: center; line-height: 80px; user-select: none; }
+        #btnUp { left: 50%; transform: translateX(-50%); }
+        #btnDown { left: 50%; bottom: 140px; transform: translateX(-50%); }
+        #score { position: absolute; top: 20px; left: 20px; color: #000; font-size: 20px; font-family: Arial; }
+    </style>
+</head>
+<body>
+<div id="score">Height: 0m</div>
+<div id="btnUp" class="btn">↑</div>
+<div id="btnDown" class="btn">↓</div>
+
+<script>
+const config = {
+    type: Phaser.AUTO,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    backgroundColor: '#87CEEB',
+    physics: { default: 'arcade' },
+    scene: { create, update }
+};
+
+let player, height = 0, upPressed = false, downPressed = false;
+const game = new Phaser.Game(config);
+
+function create() {
+    this.add.text(window.innerWidth/2, 60, 'Lineman Training', { fontSize: '24px', fill: '#000' }).setOrigin(0.5);
+    
+    // Nguzo 3
+    for(let i=0; i<3; i++){
+        this.add.rectangle(150 + i*200, window.innerHeight-200, 30, 300, 0x8B4513);
+    }
+    
+    player = this.add.rectangle(window.innerWidth/2, window.innerHeight-50, 30, 50, 0xFF0000);
+    this.physics.add.existing(player);
+
+    // Touch buttons
+    document.getElementById('btnUp').ontouchstart = () => upPressed = true;
+    document.getElementById('btnUp').ontouchend = () => upPressed = false;
+    document.getElementById('btnDown').ontouchstart = () => downPressed = true;
+    document.getElementById('btnDown').ontouchend = () => downPressed = false;
+}
+
+function update() {
+    if (upPressed && player.y > 100) {
+        player.y -= 3;
+        height += 0.1;
+    }
+    if (downPressed && player.y < window.innerHeight-50) {
+        player.y += 3;
+        height -= 0.1;
+    }
+    document.getElementById('score').innerText = 'Height: ' + Math.floor(height) + 'm';
+}
+</script>
+</body>
+</html>
