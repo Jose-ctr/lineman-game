@@ -46,28 +46,30 @@ let player, poles = [], birds = [], height = 0, score = 0, level = 1, upPressed 
 const game = new Phaser.Game(config);
 
 function create() {
-    // SKY
-    this.add.rectangle(window.innerWidth/2, window.innerHeight/2, window.innerWidth, window.innerHeight, 0x87CEEB);
+    // SKY BACKGROUND
+    this.add.rectangle(window.innerWidth/2, window.innerHeight/2, window.innerWidth, window.innerHeight, 0x87CEEB).setDepth(0);
     
-    // POLES - Brown
+    // POLES - Brown with wires
     for(let i = 0; i < 5; i++){
-        this.add.rectangle(150 + i * 200, window.innerHeight - 120, 30, 300, 0x8B4513);
-        this.add.rectangle(150 + i * 200, window.innerHeight - 270, 120, 6, 0x000); // wires
+        this.add.rectangle(150 + i * 200, window.innerHeight - 120, 30, 300, 0x8B4513).setDepth(1);
+        this.add.rectangle(150 + i * 200, window.innerHeight - 270, 120, 6, 0x000).setDepth(1); // wires
     }
     
-    // LINEMAN - Red body + Yellow helmet
-    player = this.add.rectangle(window.innerWidth / 2, window.innerHeight - 100, 30, 50, 0xFF0000);
-    this.add.circle(window.innerWidth / 2, window.innerHeight - 130, 12, 0xFFD700);
+    // LINEMAN - BIG Red body + Yellow helmet
+    player = this.add.rectangle(window.innerWidth / 2, window.innerHeight - 100, 40, 70, 0xFF0000).setDepth(3);
+    this.add.circle(window.innerWidth / 2, window.innerHeight - 140, 18, 0xFFD700).setDepth(3);
     this.physics.add.existing(player);
 
-    // BIRDS
+    // BIRDS - Bigger black triangles
     for(let i = 0; i < 4; i++){
-        let bird = this.add.triangle(200 + i * 220, 180 + i * 80, 0, 20, 20, 0, 10, 20, 0x000);
+        let bird = this.add.triangle(200 + i * 220, 180 + i * 80, 0, 30, 30, 0, 15, 30, 0x000).setDepth(2);
+        bird.setScale(1.5);
         this.physics.add.existing(bird);
         bird.body.velocity.x = -150;
         birds.push(bird);
     }
 
+    // TOUCH CONTROLS
     document.getElementById('btnUp').ontouchstart = () => upPressed = true;
     document.getElementById('btnUp').ontouchend = () => upPressed = false;
     document.getElementById('btnDown').ontouchstart = () => downPressed = true;
@@ -75,7 +77,7 @@ function create() {
 }
 
 function update() {
-    let speed = 3;
+    let speed = 3 + level * 0.5;
     
     if (upPressed && player.y > 120) {
         player.y -= speed;
