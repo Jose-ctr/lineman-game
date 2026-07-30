@@ -44,11 +44,11 @@ const config = {
 
 let player, poles = [], birds = [], height = 0, score = 0, level = 1, upPressed = false, downPressed = false;
 const game = new Phaser.Game(config);
-
+    
 function preload() {
-    this.load.image('pole', 'pole.png');
-    this.load.image('lineman', 'lineman.png');
-    this.load.image('bird', 'bird.png');
+    this.load.image('pole', 'https://i.imgur.com/L9mR4sQ.png');
+    this.load.image('lineman', 'https://i.imgur.com/7kPqV2m.png');
+    this.load.image('bird', 'https://i.imgur.com/9VqK2pR.png');
 }
 
 function create() {
