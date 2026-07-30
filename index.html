@@ -1,97 +1,63 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>LINEMAN TRAINING PRO</title>
+    <title>Lineman Training Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; font-family: Arial; background: #87CEEB; }
-        #ui { position: absolute; top: 10px; left: 10px; color: white; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; z-index: 10; }
-        .btn { position: absolute; bottom: 100px; width: 80px; height: 80px; background: rgba(255,69,0,0.6); border-radius: 50%; color: white; font-size: 40px; text-align: center; line-height: 80px; user-select: none; border: 3px solid #fff; z-index: 10;}
-        #btnUp { left: 30px; }
-        #btnDown { right: 30px; }
-        #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(0,0,0,0.9); color: white; padding: 30px; border-radius: 10px; text-align: center; display: none; z-index: 20;}
-        #donateBtn {
-            position: absolute; 
-            top: 50px; 
-            right: 10px; 
-            background: #00A651;
-            color: white; 
-            padding: 12px 18px; 
-            border: none; 
-            border-radius: 10px; 
-            font-weight: bold;
-            font-size: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-            z-index: 100;
-        }
+        body { margin: 0; background: #87CEEB; font-family: Arial; overflow: hidden; }
+        #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                    background: rgba(0,0,0,0.8); color: white; padding: 20px; border-radius: 10px; 
+                    display: none; text-align: center; z-index: 1000; }
+        #score { position: absolute; top: 20px; left: 20px; color: white; font-size: 24px; z-index: 100; }
+        #level { position: absolute; top: 20px; right: 20px; color: white; font-size: 24px; z-index: 100; }
+        #donateBtn { position: absolute; top: 10px; right: 10px; background: #ff4444; color: white; 
+                     padding: 10px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; z-index: 100; }
+        #controls { position: absolute; bottom: 20px; width: 100%; text-align: center; z-index: 100; }
+        .btn { background: rgba(255,255,255,0.8); border: none; padding: 15px 25px; margin: 0 10px; 
+               font-size: 18px; border-radius: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div id="ui">LINEMAN TRAINING PRO<br>Loading...</div>
+    <div id="score">SCORE: 0</div>
+    <div id="level">LEVEL: 1</div>
     <button id="donateBtn" onclick="showDonateOptions()">💰 SUPPORT DEVELOPER</button>
-    <div class="btn" id="btnUp">↑</div>
-    <div class="btn" id="btnDown">↓</div>
-    <div id="gameOver"><h2>GAME OVER</h2><p id="finalScore"></p><button onclick="location.reload()">RESTART</button></div>
+    
+    <div id="gameOver">
+        <h2>GAME OVER!</h2>
+        <p id="finalScore"></p>
+        <button onclick="location.reload()">PLAY AGAIN</button>
+    </div>
+    
+    <div id="controls">
+        <button class="btn" onmousedown="moveUp()" onmouseup="stopMove()">UP</button>
+        <button class="btn" onmousedown="moveDown()" onmouseup="stopMove()">DOWN</button>
+    </div>
 
 <script>
-let player, poles = [], birds = [];
-let score = 0, level = 1, height = 0;
-let upPressed = false, downPressed = false;
+let score = 0;
+let level = 1;
+let player;
+let obstacles;
+let cursors;
+let moveDirection = 0;
 
 const config = {
     type: Phaser.AUTO,
     width: window.innerWidth,
     height: window.innerHeight,
-    backgroundColor: '#87CEEB',
-    physics: { default: 'arcade' },
-    scene: { create, update }
+    physics: {
+        default: 'arcade',
+        arcade: { gravity: { y: 0 } }
+    },
+    scene: {
+        preload: preload,
+        create: create,
+        update: update
+    }
 };
-
 
 const game = new Phaser.Game(config);
 
-    
-// DONATE FUNCTION - OPEN MPESA APP + THANK YOU
-function showDonateOptions() {
-    // Copy number first
-    navigator.clipboard.writeText("0707649890");
-    
-    // Try to open MPESA app
-    window.location.href = "mpesa://";
-    
-    // Show thank you screen
-    setTimeout(() => {
-        alert("🙏 ASANTE SANA! 🙏\n\nMPESA Number Copied: 0707649890\n\nSteps:\n1. Go to MPESA → Send Money\n2. Paste the number\n3. Send any amount\n\nYour support keeps LINEMAN TRAINING PRO alive! ⚡\nGod bless you!");
-    }, 500);
-}
-
-function create() {
-    // POLES
-    for(let i = 0; i < 5; i++){
-        this.add.rectangle(150 + i * 200, window.innerHeight - 120, 30, 300, 0x8B4513).setDepth(1);
-        this.add.rectangle(150 + i * 200, window.innerHeight - 270, 120, 6, 0x000).setDepth(1);
-    }
-    
-    // LINEMAN
-    player = this.add.ectangle(window.innerWidth / 2, window.innerHeight - 100, 40, 70, 0xFF0000).setDepth(3);
-    this.add.circle(window.innerWidth / 2, window.innerHeight - 140, 18, 0xFFD700).setDepth(3);
-    this.physics.add.existing(player);
-
-    // BIRDS
-    for(let i = 0; i < 4; i++){
-        let bird = this.add.triangle(200 + i * 220, 180 + i * 80, 0, 30, 30, 0, 15, 30, 0x000).setDepth(2);
-        bird.setScale(1.5);
-        this.physics.add.existing(bird);
-        bird.body.velocity.x = -150;
-        birds.push(bird);
-    }
-
-    // CONTROLS
-    document.getElementById('btnUp').ontouchstart = () => upPressed = true;
-    document.getElementById('btnUp').ontouchend = () => upPressed = false;
-    document.getElementById('btnDown').ontouchstart = () => downPressed = true;
-    document.getElementById('btnDown').ontouchend = () => downPressed = false;
-}
 // RATING FUNCTION
 function getRating(score) {
     if(score >= 1000) {
@@ -107,41 +73,78 @@ function getRating(score) {
     }
 }
 
+// DONATE FUNCTION
+function showDonateOptions() {
+    const mpesaNumber = "0707649890";
+    navigator.clipboard.writeText(mpesaNumber);
+    alert(`ASANTE SANA! 🙏\n\nM-PESA TILL: ${mpesaNumber}\n\nNumber copied! Send any amount to support development.`);
+}
+
+function preload() {
+    // No assets needed - we use shapes
+}
+
+function create() {
+    player = this.add.rectangle(100, 400, 40, 40, 0xffff00);
+    this.physics.add.existing(player);
+    player.body.setCollideWorldBounds(true);
+    
+    obstacles = this.physics.add.group();
+    
+    this.time.addEvent({
+        delay: 1500,
+        callback: addObstacle,
+        callbackScope: this,
+        loop: true
+    });
+    
+    this.physics.add.overlap(player, obstacles, () => gameOver(this), null, this);
+}
+
+function addObstacle() {
+    let y = Phaser.Math.Between(50, config.height - 50);
+    let obstacle = obstacles.create(config.width + 50, y, null);
+    obstacle.setSize(30, 30);
+    obstacle.body.velocity.x = -200 - (level * 20);
+}
+
 function update() {
     let speed = 3 + level * 0.5;
     
-    if (upPressed && player.y > 120) {
+    if(moveDirection === 1) {
         player.y -= speed;
-        height += 0.3;
-        score += 2;
+    } else if(moveDirection === -1) {
+        player.y += speed;
     }
-    if (downPressed && player.y < window.innerHeight - 100) player.y += speed;
-
-    birds.forEach(bird => {
-        bird.x += bird.body.velocity.x * 0.016;
-        if(bird.x < -50) bird.x = window.innerWidth + 50;
-        if(Phaser.Geom.Intersects.RectangleToRectangle(player.getBounds(), bird.getBounds())){
-            gameOver(this);
+    
+    score += 0.1;
+    document.getElementById('score').innerText = 'SCORE: ' + Math.floor(score);
+    
+    if(score > level * 100) {
+        level++;
+        document.getElementById('level').innerText = 'LEVEL: ' + level;
+    }
+    
+    obstacles.children.iterate(function(child) {
+        if(child && child.x < -50) {
+            child.destroy();
         }
     });
-
-    if(score > level * 400){ level++; }
-    if(height < 0){ gameOver(this); }
-
-    document.getElementById('ui').innerHTML = `LINEMAN TRAINING PRO<br>Level: ${level} | Score: ${score} | Height: ${Math.floor(height)}m`;
 }
 
+function moveUp() { moveDirection = 1; }
+function moveDown() { moveDirection = -1; }
+function stopMove() { moveDirection = 0; }
+
 function gameOver(scene){
-    // Get rating based on score
-    let rating = getRating(score);
-    
+    let rating = getRating(Math.floor(score));
     document.getElementById('gameOver').style.display = 'block';
     document.getElementById('finalScore').innerHTML = `
-        SCORE: ${score}<br>
+        SCORE: ${Math.floor(score)}<br>
         <span style="color: ${rating.color}; font-size: 32px; font-weight: bold;">${rating.text}</span>
     `;
     scene.scene.pause();
-    }
+}
 </script>
 </body>
 </html>
