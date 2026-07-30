@@ -44,7 +44,7 @@ function moveDown() { movingDown = true; }
 function stopMove() { movingUp = false; movingDown = false; }
 
 function showDonateOptions() {
-    const mpesaNumber = "0707649890"; // <-- YOUR PHONE NUMBER
+    const mpesaNumber = "0707649890"; 
     navigator.clipboard.writeText(mpesaNumber);
     alert(`ASANTE SANA! 🙏\n\nM-PESA NUMBER: ${mpesaNumber}\n\nNumber copied! Go to M-PESA > Send Money > Paste number.`);
 }
@@ -119,30 +119,7 @@ function update() {
     }
 }
     
-    if(player.y < 0 || player.y > config.height) {
-        gameOver = true;
-        document.getElementById('gameOver').style.display = 'block';
-    }
-        }
 const game = new Phaser.Game(config);
-
-let player, scoreText, upPressed = false, downPressed = false;
-
-function create() {
-  
-}
-
-function update() {
-    
-}
-
-</script> // <-- ONLY 1 SCRIPT TAG ENDS HERE
-</body>
-</html>
-let player;
-let obstacles;
-let cursors;
-let moveDirection = 0;
 
 const config = {
     type: Phaser.AUTO,
@@ -150,7 +127,7 @@ const config = {
     height: window.innerHeight,
     physics: {
         default: 'arcade',
-        arcade: { gravity: { y: 0 } }
+        arcade: { gravity: { y: 0 }
     },
     scene: {
         preload: preload,
@@ -168,16 +145,13 @@ function getRating(score) {
     } else if(score >= 500) {
         return {text: "EXCELLENT! ⚡🔥", color: "#00ff00"};
     } else if(score >= 100) {
-        return {text: "GOOD! 💪", color: "#ffaa00"};
     } else if(score >= 20) {
         return {text: "FAIR 🙂", color: "#00aaff"};
     } else {
-        return {text: "KEEP TRYING! 💯", color: "#ff4444"};
+        return {text: "KEEP TRYING! 💯", color: "#ffffff"};
     }
-}
-
-function showDonateOptions() {
-    const mpesaNumber = "0707649890";
+}    return {text: "GOOD! 💪", color: "#ffaa00"};
+    
     navigator.clipboard.writeText(mpesaNumber);
     alert(`ASANTE SANA! 🙏\n\nM-PESA NUMBER: ${mpesaNumber}\n\nNumber copied! Open M-PESA > Send Money > Paste number to support.`);
 }
@@ -236,27 +210,7 @@ function update() {
         document.getElementById('finalScore').innerHTML = `SCORE: ${score}<br><span style="color:${rating.color}">${rating.text}</span>`;
         document.getElementById('gameOver').style.display = 'block';
     }
-    }
-
-// UPDATE
-function update() {
-    if(gameOver) return;
-
-    if(upPressed) {
-        player.y -= 5;
-        score += 1;
-    }
-    if(downPressed) {
-        player.y += 5;
-    }
-    
-    scoreText.setText('Score: ' + score);
-
-    // SIMPLE GAME OVER CHECK
-    if(player.y < 0 || player.y > config.height) {
-        gameOver = true;
-        let rating = getRating(score);
-        document.getElementById('finalScore').innerHTML = `SCORE: ${score}<br><span style="color:${rating.color}">${rating.text}</span>`;
-        document.getElementById('gameOver').style.display = 'block';
-    }
-    }
+        
+</script>
+</body>
+</html>
