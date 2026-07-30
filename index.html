@@ -49,25 +49,28 @@ function create() {
     // SKY
     this.add.rectangle(window.innerWidth/2, window.innerHeight/2, window.innerWidth, window.innerHeight, 0x87CEEB).setDepth(0);
     
-    // POLES
-    for(let i = 0; i < 5; i++){
-        this.add.rectangle(150 + i * 200, window.innerHeight - 120, 30, 300, 0x8B4513).setDepth(1);
-        this.add.rectangle(150 + i * 200, window.innerHeight - 270, 120, 6, 0x000).setDepth(1);
-    }
-    
-    // LINEMAN
-    player = this.add.rectangle(window.innerWidth / 2, window.innerHeight - 100, 40, 70, 0xFF0000).setDepth(3);
-    this.add.circle(window.innerWidth / 2, window.innerHeight - 140, 18, 0xFFD700).setDepth(3);
-    this.physics.add.existing(player);
+// SKY BACKGROUND
+this.add.rectangle(window.innerWidth/2, window.innerHeight/2, window.innerWidth, window.innerHeight, 0x87CEEB).setDepth(0);
 
-    // BIRDS
-    for(let i = 0; i < 4; i++){
-        let bird = this.add.triangle(200 + i * 220, 180 + i * 80, 0, 30, 30, 0, 15, 30, 0x000).setDepth(2);
-        bird.setScale(1.5);
-        this.physics.add.existing(bird);
-        bird.body.velocity.x = -150;
-        birds.push(bird);
-    }
+// POLES - Brown with wires
+for(let i = 0; i < 5; i++){
+    this.add.rectangle(150 + i * 200, window.innerHeight - 120, 30, 300, 0x8B4513).setDepth(1);
+    this.add.rectangle(150 + i * 200, window.innerHeight - 270, 120, 6, 0x000).setDepth(1); // wires
+}
+
+// LINEMAN - BIG Red body + Yellow helmet
+player = this.add.rectangle(window.innerWidth / 2, window.innerHeight - 100, 40, 70, 0xFF0000).setDepth(3);
+this.add.circle(window.innerWidth / 2, window.innerHeight - 140, 18, 0xFFD700).setDepth(3);
+this.physics.add.existing(player);
+
+// BIRDS - Bigger black triangles
+for(let i = 0; i < 4; i++){
+    let bird = this.add.triangle(200 + i * 220, 180 + i * 80, 0, 30, 30, 0, 15, 30, 0x000).setDepth(2);
+    bird.setScale(1.5);
+    this.physics.add.existing(bird);
+    bird.body.velocity.x = -150;
+    birds.push(bird);
+}
 
     // CONTROLS
     document.getElementById('btnUp').ontouchstart = () => upPressed = true;
