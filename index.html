@@ -80,71 +80,59 @@ function showDonateOptions() {
     alert(`ASANTE SANA! 🙏\n\nM-PESA TILL: ${mpesaNumber}\n\nNumber copied! Send any amount to support development.`);
 }
 
+// GAME VARIABLES
+let player;
+let cursors;
+let scoreText;
+let gameOver = false;
+
+// PRELOAD
 function preload() {
-    // No assets needed - we use shapes
+    // nothing to load
 }
 
+// CREATE
 function create() {
+    this.cameras.main.setBackgroundColor('#87CEEB'); // SKY BLUE
+    
+    // Add clouds
+    for(let i = 0; i < 5; i++) {
+        this.add.ellipse(Phaser.Math.Between(0, config.width), Phaser.Math.Between(50, 200), 100, 50, 0xffffff, 0.6);
+    }
+
     player = this.add.rectangle(100, 400, 40, 40, 0xffff00);
     this.physics.add.existing(player);
     player.body.setCollideWorldBounds(true);
-    
-    obstacles = this.physics.add.group();
-    
-    this.time.addEvent({
-        delay: 1500,
-        callback: addObstacle,
-        callbackScope: this,
-        loop: true
-    });
-    
-    this.physics.add.overlap(player, obstacles, () => gameOver(this), null, this);
+
+    scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#fff' });
+    scoreText.setDepth(100);
+
+    // MOBILE BUTTONS
+    document.getElementById('btnUp').addEventListener('touchstart', () => upPressed = true);
+    document.getElementById('btnUp').addEventListener('touchend', () => upPressed = false);
+    document.getElementById('btnDown').addEventListener('touchstart', () => downPressed = true);
+    document.getElementById('btnDown').addEventListener('touchend', () => downPressed = false);
 }
 
-function addObstacle() {
-    let y = Phaser.Math.Between(50, config.height - 50);
-    let obstacle = obstacles.create(config.width + 50, y, null);
-    obstacle.setSize(30, 30);
-    obstacle.body.velocity.x = -200 - (level * 20);
-}
-
+// UPDATE
 function update() {
-    let speed = 3 + level * 0.5;
-    
-    if(moveDirection === 1) {
-        player.y -= speed;
-    } else if(moveDirection === -1) {
-        player.y += speed;
+    if(gameOver) return;
+
+    if(upPressed) {
+        player.y -= 5;
+        score += 1;
+    }
+    if(downPressed) {
+        player.y += 5;
     }
     
-    score += 0.1;
-    document.getElementById('score').innerText = 'SCORE: ' + Math.floor(score);
-    
-    if(score > level * 100) {
-        level++;
-        document.getElementById('level').innerText = 'LEVEL: ' + level;
+    scoreText.setText('Score: ' + score);
+
+    // SIMPLE GAME OVER CHECK
+    if(player.y < 0 || player.y > config.height) {
+        gameOver = true;
+        let rating = getRating(score);
+        document.getElementById('finalScore').innerHTML = `SCORE: ${score}<br><span style="color:${rating.color}">${rating.text}</span>`;
+        document.getElementById('gameOver').style.display = 'block';
     }
-    
-    obstacles.children.iterate(function(child) {
-        if(child && child.x < -50) {
-            child.destroy();
-        }
-    });
-}
-
-function moveUp() { moveDirection = 1; }
-function moveDown() { moveDirection = -1; }
-function stopMove() { moveDirection = 0; }
-
-function gameOver(scene){
-    let rating = getRating(Math.floor(score));
-    document.getElementById('gameOver').style.display = 'block';
-    document.getElementById('finalScore').innerHTML = `
-        SCORE: ${Math.floor(score)}<br>
-        <span style="color: ${rating.color}; font-size: 32px; font-weight: bold;">${rating.text}</span>
-    `;
-    scene.scene.pause();
-}
-</script>
-</body>
-</html>
+    }
