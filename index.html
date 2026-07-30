@@ -63,7 +63,7 @@ function getRating(score) {
     }
 }
 
-// DONATE FUNCTION - OPEN MPESA APP
+// DONATE FUNCTION - OPEN MPESA APP + THANK YOU
 function showDonateOptions() {
     // Copy number first
     navigator.clipboard.writeText("0707649890");
@@ -71,7 +71,10 @@ function showDonateOptions() {
     // Try to open MPESA app
     window.location.href = "mpesa://";
     
-    alert("MPESA Number Copied! ✅\n\n0707649890\n\nSteps:\n1. MPESA App should open\n2. Go to Send Money\n3. Paste the number\n4. Enter any amount\nName: LINEMAN GAME\nUse 'Donation' as reference\nThank you! 🙏⚡");
+    // Show thank you screen
+    setTimeout(() => {
+        alert("🙏 ASANTE SANA! 🙏\n\nMPESA Number Copied: 0707649890\n\nSteps:\n1. Go to MPESA → Send Money\n2. Paste the number\n3. Send any amount\n\nYour support keeps LINEMAN TRAINING PRO alive! ⚡\nGod bless you!");
+    }, 500);
 }
 
 function create() {
