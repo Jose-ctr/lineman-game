@@ -21,17 +21,37 @@
     <div id="score">SCORE: 0</div>
     <div id="level">LEVEL: 1</div>
     <button id="donateBtn" onclick="showDonateOptions()">💰 SUPPORT DEVELOPER</button>
-    
+
     <div id="gameOver">
         <h2>GAME OVER!</h2>
         <p id="finalScore"></p>
         <button onclick="location.reload()">PLAY AGAIN</button>
     </div>
-    
+
     <div id="controls">
-        <button class="btn" onmousedown="moveUp()" onmouseup="stopMove()">UP</button>
-        <button class="btn" onmousedown="moveDown()" onmouseup="stopMove()">DOWN</button>
+        <button class="btn" onmousedown="moveUp()" onmouseup="stopMove()" ontouchstart="moveUp()" ontouchend="stopMove()">↑</button>
+        <button class="btn" onmousedown="moveDown()" onmouseup="stopMove()" ontouchstart="moveDown()" ontouchend="stopMove()">↓</button>
     </div>
+
+<script>
+let score = 0;
+let level = 1;
+let movingUp = false;
+let movingDown = false;
+
+function moveUp() { movingUp = true; }
+function moveDown() { movingDown = true; }
+function stopMove() { movingUp = false; movingDown = false; }
+
+function showDonateOptions() {
+    const mpesaNumber = "0707649890"; // <-- YOUR PHONE NUMBER
+    navigator.clipboard.writeText(mpesaNumber);
+    alert(`ASANTE SANA! 🙏\n\nM-PESA NUMBER: ${mpesaNumber}\n\nNumber copied! Go to M-PESA > Send Money > Paste number.`);
+}
+
+// GAME LOOP WILL GO HERE
+</script>
+</body>
 
 <script>
 let score = 0;
