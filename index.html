@@ -93,11 +93,10 @@ function getRating(score) {
     }
 }
 
-// DONATE FUNCTION
 function showDonateOptions() {
     const mpesaNumber = "0707649890";
     navigator.clipboard.writeText(mpesaNumber);
-    alert(`ASANTE SANA! 🙏\n\nM-PESA TILL: ${mpesaNumber}\n\nNumber copied! Send any amount to support development.`);
+    alert(`ASANTE SANA! 🙏\n\nM-PESA NUMBER: ${mpesaNumber}\n\nNumber copied! Go to M-PESA > Send Money > Paste number.`);
 }
 
 // GAME VARIABLES
@@ -127,8 +126,6 @@ function create() {
     scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#fff' });
     scoreText.setDepth(100);
 
-    // MOBILE BUTTONS
-    document.getElementById('btnUp').addEventListener('touchstart', () => upPressed = true);
     // MOBILE BUTTONS
 document.getElementById('btnUp').addEventListener('touchstart', () => upPressed = true);
 document.getElementById('btnUp').addEventListener('touchend', () => upPressed = false);
