@@ -49,14 +49,15 @@ const config = {
 
 const game = new Phaser.Game(config);
 
-// DONATE FUNCTION
+// DONATE FUNCTION - OPEN MPESA APP
 function showDonateOptions() {
-    let choice = prompt("Support LINEMAN GAME:\n\n1. MPESA: 0707649890\n2. PayPal\nType 1 for MPESA or 2 for PayPal");
-    if(choice == "1") {
-        alert("Send MPESA to: 0707649890\nName: LINEMAN GAME\nUse 'Donation' as reference\nThank you for supporting! 🙏⚡");
-    } else if(choice == "2") {
-        alert("PayPal coming soon!\nFor now please use MPESA: 0707649890");
-    }
+    // Copy number first
+    navigator.clipboard.writeText("0707649890");
+    
+    // Try to open MPESA app
+    window.location.href = "mpesa://";
+    
+    alert("MPESA Number Copied! ✅\n\n0707649890\n\nSteps:\n1. MPESA App should open\n2. Go to Send Money\n3. Paste the number\n4. Enter any amount\nName: LINEMAN GAME\nUse 'Donation' as reference\nThank you! 🙏⚡");
 }
 
 function create() {
