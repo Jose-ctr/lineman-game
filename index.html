@@ -11,16 +11,40 @@
         #btnDown { right: 30%; transform: translateX(50%); }
         #ui { position: absolute; top: 20px; width: 100%; text-align: center; color: #000; font-size: 20px; font-weight: bold; }
         #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(0,0,0,0.8); color: white; padding: 30px; border-radius: 20px; text-align: center; display: none; }
+        
+        /* DONATE BUTTON */
+        #donateBtn {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+        }
+        #donateBtn button {
+            background: #00A651; /* M-Pesa Green */
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 25px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 <div id="ui">Level: 1 | Score: 0 | Height: 0m</div>
 <div id="btnUp" class="btn">↑</div>
 <div id="btnDown" class="btn">↓</div>
+
 <div id="gameOver">
     <h2>GAME OVER!</h2>
     <p id="finalScore">Score: 0</p>
     <button onclick="location.reload()" style="padding:10px 20px; font-size:18px;">Play Again</button>
+</div>
+
+<!-- M-PESA DONATE SECTION -->
+<div id="donateBtn">
+    <p style="color:#000; font-size:14px;">Love the game? Support the developer</p>
+    <button onclick="alert('Send Support to M-Pesa: 0707 649 890\n\nThank you! 🙏')">Support with M-Pesa 50/-</button>
 </div>
 
 <script>
@@ -39,13 +63,13 @@ const game = new Phaser.Game(config);
 
 function create() {
     // Create 5 power poles
-    for(let i=0; i<5; i++){
-        let pole = this.add.rectangle(150 + i*180, window.innerHeight-200, 30, 300, 0x8B4513);
+    for(let i = 0; i < 5; i++){
+        let pole = this.add.rectangle(150 + i * 180, window.innerHeight - 200, 30, 300, 0x8B4513);
         poles.push(pole);
     }
     
-    // Create red player - the lineman
-    player = this.add.rectangle(window.innerWidth/2, window.innerHeight-50, 30, 50, 0xFF0000);
+    // Create the red lineman player
+    player = this.add.rectangle(window.innerWidth / 2, window.innerHeight - 50, 30, 50, 0xFF0000);
     this.physics.add.existing(player);
 
     // Mobile touch controls
@@ -56,9 +80,33 @@ function create() {
 }
 
 function update() {
-    let speed = 2 + level * 0.5; // Speed increases with level
+    let speed = 2 + level * 0.5; // Speed increases each level
     
     if (upPressed && player.y > 100) {
         player.y -= speed;
         height += 0.2;
-       
+        score += 1; // Earn 1 point for climbing
+    }
+    if (downPressed && player.y < window.innerHeight - 50) {
+        player.y += speed;
+        height -= 0.1;
+    }
+
+    // Level up every 500 points
+    if(score > level * 500){
+        level++;
+    }
+
+    // Game Over when player falls
+    if(height < 0){
+        document.getElementById('gameOver').style.display = 'block';
+        document.getElementById('finalScore').innerText = `Final Score: ${score} | Level Reached: ${level}`;
+        this.scene.pause();
+    }
+
+    // Update UI text
+    document.getElementById('ui').innerText = `Level: ${level} | Score: ${score} | Height: ${Math.floor(height)}m`;
+}
+</script>
+</body>
+</html>
