@@ -13,9 +13,12 @@
         #donateBtn { position: absolute; bottom: 10px; width: 100%; text-align: center; }
         #donateBtn button { background: #00A651; color: white; border: none; padding: 12px 25px; font-size: 16px; border-radius: 25px; font-weight: bold; }
         .kplc-title { color: #FFD700; font-size: 14px; }
+        #startScreen { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); color:white; display:flex; align-items:center; justify-content:center; font-size:24px; z-index:999; }
     </style>
 </head>
 <body>
+<div id="startScreen" onclick="startGame()">TAP TO START<br><small>KPLC Safety First</small></div>
+
 <div id="ui">
     <div class="kplc-title">KPLC LINEMAN TRAINING</div>
     Level: 1 | Score: 0 | Height: 0m
@@ -34,52 +37,61 @@
 </div>
 
 <script>
+let gameStarted = false;
 const config = {
     type: Phaser.AUTO,
     width: window.innerWidth,
     height: window.innerHeight,
+    backgroundColor: '#87CEEB',
     physics: { default: 'arcade' },
-    scene: { preload, create, update }
+    scene: { create, update }
 };
 
 let player, poles = [], birds = [], height = 0, score = 0, level = 1, upPressed = false, downPressed = false;
+let climbSound, gameOverSound;
 const game = new Phaser.Game(config);
-    
-function preload() {
-    this.load.image('pole', 'https://i.imgur.com/L9mR4sQ.png');
-    this.load.image('lineman', 'https://i.imgur.com/7kPqV2m.png');
-    this.load.image('bird', 'https://i.imgur.com/9VqK2pR.png');
+
+function startGame(){
+    document.getElementById('startScreen').style.display = 'none';
+    gameStarted = true;
 }
 
 function create() {
-    // 5 REAL KENYAN POLES
+    // CREATE IMAGES WITH CODE - NO FILES NEEDED
+    // Pole: Brown rectangle
     for(let i = 0; i < 5; i++){
-        let pole = this.add.image(150 + i * 200, window.innerHeight - 120, 'pole');
-        pole.setScale(0.4);
+        let pole = this.add.rectangle(150 + i * 200, window.innerHeight - 120, 30, 300, 0x8B4513);
+        let wires = this.add.rectangle(150 + i * 200, window.innerHeight - 270, 100, 5, 0x000);
         poles.push(pole);
     }
     
-    // REAL KPLC LINEMAN
-    player = this.add.image(window.innerWidth / 2, window.innerHeight - 100, 'lineman');
-    player.setScale(0.18);
+    // Lineman: Blue rectangle with helmet
+    player = this.add.rectangle(window.innerWidth / 2, window.innerHeight - 100, 30, 50, 0x003366);
+    let helmet = this.add.circle(window.innerWidth / 2, window.innerHeight - 130, 12, 0xFFD700);
     this.physics.add.existing(player);
 
-    // BIRDS TO DODGE
+    // Birds: Black triangles
     for(let i = 0; i < 4; i++){
-        let bird = this.add.image(200 + i * 220, 180 + i * 80, 'bird');
-        bird.setScale(0.12);
+        let bird = this.add.triangle(200 + i * 220, 180 + i * 80, 0, 20, 20, 0, 10, 20, 0x000);
         this.physics.add.existing(bird);
         bird.body.velocity.x = -130 - level * 25;
+        birds.push(bird);
     }
 
+    // SOUNDS
+    climbSound = this.sound.add('https://cdn.pixabay.com/audio/1/1/climbing-1.mp3');
+    gameOverSound = this.sound.add('https://cdn.pixabay.com/audio/1/1/game-over-1.mp3');
+
     // Touch controls
-    document.getElementById('btnUp').ontouchstart = () => upPressed = true;
-    document.getElementById('btnUp').ontouchend = () => upPressed = false;
+    document.getElementById('btnUp').ontouchstart = () => { upPressed = true; if(gameStarted) climbSound.play(); }
+    document.getElementById('btnUp').ontouchend = () => { upPressed = false; climbSound.stop(); }
     document.getElementById('btnDown').ontouchstart = () => downPressed = true;
     document.getElementById('btnDown').ontouchend = () => downPressed = false;
 }
 
 function update() {
+    if(!gameStarted) return;
+    
     let speed = 2.5 + level * 0.6;
     
     if (upPressed && player.y > 120) {
@@ -104,6 +116,7 @@ function update() {
 }
 
 function gameOver(scene){
+    gameOverSound.play();
     document.getElementById('gameOver').style.display = 'block';
     document.getElementById('finalScore').innerText = `Final Score: ${score} | Level Reached: ${level}`;
     scene.scene.pause();
