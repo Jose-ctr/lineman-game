@@ -6,46 +6,37 @@
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
     <style> 
         body { margin: 0; background: #87CEEB; overflow: hidden; font-family: Arial; }
-        .btn { position: absolute; bottom: 40px; width: 80px; height: 80px; background: rgba(0,0,0,0.5); border-radius: 50%; color: white; font-size: 40px; text-align: center; line-height: 80px; user-select: none; }
+        .btn { position: absolute; bottom: 100px; width: 80px; height: 80px; background: rgba(0,0,0,0.5); border-radius: 50%; color: white; font-size: 40px; text-align: center; line-height: 80px; user-select: none; }
         #btnUp { left: 30%; transform: translateX(-50%); }
         #btnDown { right: 30%; transform: translateX(50%); }
-        #ui { position: absolute; top: 20px; width: 100%; text-align: center; color: #000; font-size: 20px; font-weight: bold; }
-        #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(0,0,0,0.8); color: white; padding: 30px; border-radius: 20px; text-align: center; display: none; }
-        
-        /* DONATE BUTTON */
-        #donateBtn {
-            position: absolute;
-            bottom: 10px;
-            width: 100%;
-            text-align: center;
-        }
-        #donateBtn button {
-            background: #00A651; /* M-Pesa Green */
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            font-size: 16px;
-            border-radius: 25px;
-            font-weight: bold;
-        }
+        #ui { position: absolute; top: 20px; width: 100%; text-align: center; color: #000; font-size: 18px; font-weight: bold; }
+        #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(0,0,0,0.9); color: white; padding: 30px; border-radius: 20px; text-align: center; display: none; }
+        #donateBtn { position: absolute; bottom: 10px; width: 100%; text-align: center; }
+        #donateBtn button { background: #00A651; color: white; border: none; padding: 12px 25px; font-size: 16px; border-radius: 25px; font-weight: bold; margin: 5px; }
+        #shareBtn { background: #25D366 !important; } /* WhatsApp Green */
     </style>
 </head>
 <body>
-<div id="ui">Level: 1 | Score: 0 | Height: 0m</div>
+<div id="ui">Level: 1 | Score: 0 | Height: 0m | Best: 0</div>
 <div id="btnUp" class="btn">↑</div>
 <div id="btnDown" class="btn">↓</div>
 
 <div id="gameOver">
     <h2>GAME OVER!</h2>
     <p id="finalScore">Score: 0</p>
+    <p id="bestScore">Best: 0</p>
     <button onclick="location.reload()" style="padding:10px 20px; font-size:18px;">Play Again</button>
 </div>
 
-<!-- M-PESA DONATE SECTION -->
 <div id="donateBtn">
     <p style="color:#000; font-size:14px;">Love the game? Support the developer</p>
-    <button onclick="alert('Send Support to M-Pesa: 0707 649 890\n\nThank you! 🙏')">Support with M-Pesa 50/-</button>
+    <button onclick="alert('Send Support to M-Pesa: 0707 649 890\n\nThank you! 🙏')">Support 50/-</button>
+    <button id="shareBtn" onclick="shareGame()">Share Game</button>
 </div>
+
+<!-- SOUNDS -->
+<audio id="climbSound" src="https://cdn.pixabay.com/audio/1/1/climbing-1.mp3"></audio>
+<audio id="gameOverSound" src="https://cdn.pixabay.com/audio/1/1/game-over-1.mp3"></audio>
 
 <script>
 const config = {
@@ -58,54 +49,84 @@ const config = {
 };
 
 let player, height = 0, score = 0, level = 1, upPressed = false, downPressed = false;
-let poles = [];
+let poles = [], birds = [], bestScore = 0;
 const game = new Phaser.Game(config);
 
 function create() {
-    // Create 5 power poles
+    // Load Best Score
+    bestScore = localStorage.getItem('linemanBest') || 0;
+    
+    // Create poles
     for(let i = 0; i < 5; i++){
         let pole = this.add.rectangle(150 + i * 180, window.innerHeight - 200, 30, 300, 0x8B4513);
         poles.push(pole);
     }
     
-    // Create the red lineman player
+    // Create player
     player = this.add.rectangle(window.innerWidth / 2, window.innerHeight - 50, 30, 50, 0xFF0000);
     this.physics.add.existing(player);
 
-    // Mobile touch controls
-    document.getElementById('btnUp').ontouchstart = () => upPressed = true;
-    document.getElementById('btnUp').ontouchend = () => upPressed = false;
+    // Create 3 birds as obstacles
+    for(let i = 0; i < 3; i++){
+        let bird = this.add.triangle(200 + i * 250, 200 + i * 100, 0, 20, 20, 0, 10, 20, 0x000);
+        this.physics.add.existing(bird);
+        bird.body.velocity.x = -100 - level * 20;
+        birds.push(bird);
+    }
+
+    // Touch controls
+    document.getElementById('btnUp').ontouchstart = () => { upPressed = true; document.getElementById('climbSound').play(); }
+    document.getElementById('btnUp').ontouchend = () => { upPressed = false; document.getElementById('climbSound').pause(); }
     document.getElementById('btnDown').ontouchstart = () => downPressed = true;
     document.getElementById('btnDown').ontouchend = () => downPressed = false;
 }
 
 function update() {
-    let speed = 2 + level * 0.5; // Speed increases each level
+    let speed = 2 + level * 0.5;
     
     if (upPressed && player.y > 100) {
         player.y -= speed;
         height += 0.2;
-        score += 1; // Earn 1 point for climbing
+        score += 1;
     }
     if (downPressed && player.y < window.innerHeight - 50) {
         player.y += speed;
         height -= 0.1;
     }
 
-    // Level up every 500 points
-    if(score > level * 500){
-        level++;
-    }
+    // Move birds
+    birds.forEach(bird => {
+        bird.x += bird.body.velocity.x * 0.016;
+        if(bird.x < -50) bird.x = window.innerWidth + 50; // Loop birds
+        
+        // Collision check
+        if(Phaser.Geom.Intersects.RectangleToRectangle(player.getBounds(), bird.getBounds())){
+            gameOver(this);
+        }
+    });
 
-    // Game Over when player falls
-    if(height < 0){
-        document.getElementById('gameOver').style.display = 'block';
-        document.getElementById('finalScore').innerText = `Final Score: ${score} | Level Reached: ${level}`;
-        this.scene.pause();
-    }
+    if(score > level * 500){ level++; }
 
-    // Update UI text
-    document.getElementById('ui').innerText = `Level: ${level} | Score: ${score} | Height: ${Math.floor(height)}m`;
+    if(height < 0){ gameOver(this); }
+
+    document.getElementById('ui').innerText = `Level: ${level} | Score: ${score} | Height: ${Math.floor(height)}m | Best: ${bestScore}`;
+}
+
+function gameOver(scene){
+    document.getElementById('gameOverSound').play();
+    if(score > bestScore){
+        bestScore = score;
+        localStorage.setItem('linemanBest', bestScore);
+    }
+    document.getElementById('gameOver').style.display = 'block';
+    document.getElementById('finalScore').innerText = `Final Score: ${score} | Level: ${level}`;
+    document.getElementById('bestScore').innerText = `Best Score: ${bestScore}`;
+    scene.scene.pause();
+}
+
+function shareGame(){
+    const text = `Play my game Lineman Training Pro! Can you beat ${bestScore} points? 🔥 https://jose-ctr.github.io/lineman-game/`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
 }
 </script>
 </body>
