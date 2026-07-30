@@ -97,10 +97,13 @@ function create() {
     scoreText = this.add.text(16, 16, 'SCORE: 0', { fontSize: '24px', fill: '#fff' });
     scoreText.setDepth(100);
 
-    // BUTTONS
-    document.getElementById('btnUp').addEventListener('touchstart', () => upPressed = true);
-    document.getElementById('btnUp').addEventListener('touchend', () => upPressed = false);
-    document.getElementById('btnDown').addEventListener('touchstart', () => downPressed = true);
+// BUTTONS
+document.getElementById('btnUp').addEventListener('touchstart', () => upPressed = true);
+document.getElementById('btnUp').addEventListener('touchend', () => upPressed = false);
+
+document.getElementById('btnDown').addEventListener('touchstart', () => downPressed = true);
+document.getElementById('btnDown').addEventListener('touchend', () => downPressed = false);
+    
     document.getElementById('btnDown').addEventListener('touchend', () => downPressed = false);
 }
 
@@ -109,6 +112,12 @@ function update() {
     if(upPressed) { player.y -= 5; score += 1; }
     if(downPressed) { player.y += 5; }
     scoreText.setText('SCORE: ' + score);
+    
+    if(player.y < 0 || player.y > config.height) {
+        gameOver = true;
+        document.getElementById('gameOver').style.display = 'block';
+    }
+}
     
     if(player.y < 0 || player.y > config.height) {
         gameOver = true;
