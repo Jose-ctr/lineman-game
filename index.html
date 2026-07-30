@@ -129,10 +129,35 @@ function create() {
 
     // MOBILE BUTTONS
     document.getElementById('btnUp').addEventListener('touchstart', () => upPressed = true);
-    document.getElementById('btnUp').addEventListener('touchend', () => upPressed = false);
-    document.getElementById('btnDown').addEventListener('touchstart', () => downPressed = true);
-    document.getElementById('btnDown').addEventListener('touchend', () => downPressed = false);
+    // MOBILE BUTTONS
+document.getElementById('btnUp').addEventListener('touchstart', () => upPressed = true);
+document.getElementById('btnUp').addEventListener('touchend', () => upPressed = false);
+document.getElementById('btnDown').addEventListener('touchstart', () => downPressed = true);
+document.getElementById('btnDown').addEventListener('touchend', () => downPressed = false);
 }
+
+// UPDATE
+function update() {
+    if(gameOver) return;
+
+    if(upPressed) {
+        player.y -= 5;
+        score += 1;
+    }
+    if(downPressed) {
+        player.y += 5;
+    }
+    
+    scoreText.setText('Score: ' + score);
+
+    // SIMPLE GAME OVER CHECK
+    if(player.y < 0 || player.y > config.height) {
+        gameOver = true;
+        let rating = getRating(score);
+        document.getElementById('finalScore').innerHTML = `SCORE: ${score}<br><span style="color:${rating.color}">${rating.text}</span>`;
+        document.getElementById('gameOver').style.display = 'block';
+    }
+    }
 
 // UPDATE
 function update() {
