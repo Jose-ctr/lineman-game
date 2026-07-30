@@ -104,7 +104,22 @@ function create() {
     document.getElementById('btnDown').ontouchstart = () => downPressed = true;
     document.getElementById('btnDown').ontouchend = () => downPressed = false;
 }
+// RATING FUNCTION
+function getRating(score) {
+    if(score >= 1000) {
+        return {text: "LEGENDARY! 👑⚡", color: "#ffd700"};
+    } else if(score >= 500) {
+        return {text: "EXCELLENT! ⚡🔥", color: "#00ff00"};
+    } else if(score >= 100) {
+        return {text: "GOOD! 💪", color: "#ffaa00"};
+    } else if(score >= 20) {
+        return {text: "FAIR 🙂", color: "#00aaff"};
+    } else {
+        return {text: "KEEP TRYING! 💯", color: "#ff4444"};
+    }
+}
 
+function update() {
 function update() {
     let speed = 3 + level * 0.5;
     
@@ -136,7 +151,7 @@ function gameOver(scene){
     document.getElementById('gameOver').style.display = 'block';
     document.getElementById('finalScore').innerHTML = `
         SCORE: ${score}<br>
-        <span style="color: ${rating.color}; font-size: 28px; font-weight: bold;">${rating.text}</span>
+        <span style="color: ${rating.color}; font-size: 32px; font-weight: bold;">${rating.text}</span>
     `;
     scene.scene.pause();
     }
