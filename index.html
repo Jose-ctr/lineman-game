@@ -47,22 +47,10 @@ const config = {
     scene: { create, update }
 };
 
-const game = new Phaser.Game(config);
+
 const game = new Phaser.Game(config);
 
-// RATING FUNCTION
-function getRating(score) {
-    if(score >= 50) {
-        return {text: "EXCELLENT! ⚡🔥", color: "#00ff00"};
-    } else if(score >= 20) {
-        return {text: "GOOD! 💪", color: "#ffaa00"};
-    } else if(score >= 5) {
-        return {text: "FAIR 🙂", color: "#00aaff"};
-    } else {
-        return {text: "KEEP TRYING! 💯", color: "#ff4444"};
-    }
-}
-
+    
 // DONATE FUNCTION - OPEN MPESA APP + THANK YOU
 function showDonateOptions() {
     // Copy number first
@@ -85,7 +73,7 @@ function create() {
     }
     
     // LINEMAN
-    player = this.add.rectangle(window.innerWidth / 2, window.innerHeight - 100, 40, 70, 0xFF0000).setDepth(3);
+    player = this.add.ectangle(window.innerWidth / 2, window.innerHeight - 100, 40, 70, 0xFF0000).setDepth(3);
     this.add.circle(window.innerWidth / 2, window.innerHeight - 140, 18, 0xFFD700).setDepth(3);
     this.physics.add.existing(player);
 
