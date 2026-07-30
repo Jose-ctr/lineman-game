@@ -49,13 +49,87 @@ function showDonateOptions() {
     alert(`ASANTE SANA! 🙏\n\nM-PESA NUMBER: ${mpesaNumber}\n\nNumber copied! Go to M-PESA > Send Money > Paste number.`);
 }
 
-// GAME LOOP WILL GO HERE
-</script>
-</body>
+</div>
 
 <script>
 let score = 0;
 let level = 1;
+let movingUp = false;
+let movingDown = false;
+
+function moveUp() { movingUp = true; }
+function moveDown() { movingDown = true; }
+function stopMove() { movingUp = false; movingDown = false; }
+
+function showDonateOptions() {
+    const mpesaNumber = "0707649890";
+    navigator.clipboard.writeText(mpesaNumber);
+    alert(`ASANTE SANA! 🙏\n\nM-PESA NUMBER: ${mpesaNumber}\n\nNumber copied!`);
+}
+
+
+// GAME CONFIG
+const config = {
+    type: Phaser.AUTO,
+    width: window.innerWidth,
+    height: window.innerHeight - 100,
+    backgroundColor: '#87CEEB',
+    physics: { default: 'arcade' },
+    scene: { preload, create, update }
+};
+    let player, scoreText, upPressed = false, downPressed = false, gameOver = false;
+
+function preload() {}
+
+function create() {
+    // SKY + CLOUDS
+    this.cameras.main.setBackgroundColor('#87CEEB');
+    for(let i = 0; i < 5; i++) {
+        this.add.ellipse(Phaser.Math.Between(0, config.width), Phaser.Math.Between(50, 200), 100, 50, 0xffffff, 0.6);
+    }
+
+    // YELLOW LINEMAN
+    player = this.add.rectangle(100, config.height/2, 40, 40, 0xffff00);
+    this.physics.add.existing(player);
+    player.body.setCollideWorldBounds(true);
+
+    // SCORE
+    scoreText = this.add.text(16, 16, 'SCORE: 0', { fontSize: '24px', fill: '#fff' });
+    scoreText.setDepth(100);
+
+    // BUTTONS
+    document.getElementById('btnUp').addEventListener('touchstart', () => upPressed = true);
+    document.getElementById('btnUp').addEventListener('touchend', () => upPressed = false);
+    document.getElementById('btnDown').addEventListener('touchstart', () => downPressed = true);
+    document.getElementById('btnDown').addEventListener('touchend', () => downPressed = false);
+}
+
+function update() {
+    if(gameOver) return;
+    if(upPressed) { player.y -= 5; score += 1; }
+    if(downPressed) { player.y += 5; }
+    scoreText.setText('SCORE: ' + score);
+    
+    if(player.y < 0 || player.y > config.height) {
+        gameOver = true;
+        document.getElementById('gameOver').style.display = 'block';
+    }
+        }
+const game = new Phaser.Game(config);
+
+let player, scoreText, upPressed = false, downPressed = false;
+
+function create() {
+  
+}
+
+function update() {
+    
+}
+
+</script> // <-- ONLY 1 SCRIPT TAG ENDS HERE
+</body>
+</html>
 let player;
 let obstacles;
 let cursors;
