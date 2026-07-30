@@ -126,6 +126,14 @@ const config = {
 let player, poles = [], birds = [], height = 0, score = 0, level = 1, upPressed = false, downPressed = false;
 const game = new Phaser.Game(config);
 
+    function showDonateOptions() {
+    let choice = prompt("Support LINEMAN GAME:\n\n1. MPESA: 0707649890\n2. PayPal\n\nType 1 for MPESA or 2 for PayPal");
+    if(choice == "1") {
+        alert("Send MPESA to: 0707649890\nName: LINEMAN GAME\nUse 'Donation' as reference\nThank you for supporting! 🙏⚡");
+    } else if(choice == "2") {
+        alert("PayPal coming soon!\nFor now please use MPESA: 0707649890");
+    }
+    }
 function create() {
     // SKY BACKGROUND
     this.add.rectangle(window.innerWidth/2, window.innerHeight/2, window.innerWidth, window.innerHeight, 0x87CEEB).setDepth(0);
