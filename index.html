@@ -1,48 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Lineman Training Pro</title>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
-    <style> 
-        body { margin: 0; background: #87CEEB; overflow: hidden; font-family: Arial; }
-        .btn { position: absolute; bottom: 100px; width: 80px; height: 80px; background: rgba(255,69,0,0.6); border-radius: 50%; color: white; font-size: 40px; text-align: center; line-height: 80px; user-select: none; border: 3px solid #fff; }
-#btnUp { left: 30px; } #btnDown { right: 30px; }
-        #ui { position: absolute; top: 10px; width: 100%; text-align: center; color: #FF4500; font-size: 18px; font-weight: bold; background: rgba(255,255,255,0.9); padding: 10px; }
-        #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(0,0,0,0.9); color: white; padding: 25px; border-radius: 20px; text-align: center; display: none; width: 85%; }
-        #donateBtn { position: absolute; bottom: 10px; width: 100%; text-align: center; }
-        #donateBtn button { background: #00A651; color: white; border: non i8 e; padding: 12px 25px; font-size: 16px; border-radius: 25px; font-weight: bold; }
+    <title>LINEMAN TRAINING PRO</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: Arial; background: #87CEEB; }
+        #ui { position: absolute; top: 10px; left: 10px; color: white; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; z-index: 10; }
+        .btn { position: absolute; bottom: 100px; width: 80px; height: 80px; background: rgba(255,69,0,0.6); border-radius: 50%; color: white; font-size: 40px; text-align: center; line-height: 80px; user-select: none; border: 3px solid #fff; z-index: 10;}
+        #btnUp { left: 30px; }
+        #btnDown { right: 30px; }
+        #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(0,0,0,0.9); color: white; padding: 30px; border-radius: 10px; text-align: center; display: none; z-index: 20;}
+        #donateBtn {
+            position: absolute; 
+            top: 50px; 
+            right: 10px; 
+            background: #00A651;
+            color: white; 
+            padding: 12px 18px; 
+            border: none; 
+            border-radius: 10px; 
+            font-weight: bold;
+            font-size: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
-<div id="ui">
-    <div>LINEMAN TRAINING PRO</div>
-    Level: 1 | Score: 0 | Height: 0m
-</div>
-<div id="btnUp" class="btn">↑</div>
-<div id="btnDown" class="btn">↓</div>
-
-<div id="gameOver">
-    <h2>GAME OVER!</h2>
-    <p id="finalScore">Score: 0</p>
-    <button onclick="location.reload()" style="padding:10px 20px; font-size:18px; background:#FF4500; color:white; border:none; border-radius:10px;">Play Again</button>
-</div>
-
-<button id="donateBtn" onclick="showDonateOptions()">💰 SUPPORT DEVELOPER</button>
+    <div id="ui">LINEMAN TRAINING PRO<br>Loading...</div>
+    <button id="donateBtn" onclick="showDonateOptions()">💰 SUPPORT DEVELOPER</button>
+    <div class="btn" id="btnUp">↑</div>
+    <div class="btn" id="btnDown">↓</div>
+    <div id="gameOver"><h2>GAME OVER</h2><p id="finalScore"></p><button onclick="location.reload()">RESTART</button></div>
 
 <script>
-    
-// DONATE FUNCTION
-function showDonateOptions() {
-    let choice = prompt("Support LINEMAN GAME:\n\n1. MPESA: 0707649890\n2. PayPal\nType 1 for MPESA or 2 for PayPal");
-    if(choice == "1") {
-        alert("Send MPESA to: 0707649890\nName: LINEMAN GAME\nUse 'Donation' as reference\nThank you for supporting! 🙏⚡");
-    } else if(choice == "2") {
-        alert("PayPal coming soon!\nFor now please use MPESA: 0707649890");
-    }
-}
-
-let player, poles = [], birds = [], height = 0, score = 0, level = 1, upPressed = false, downPressed = false;
+let player, poles = [], birds = [];
+let score = 0, level = 1, height = 0;
+let upPressed = false, downPressed = false;
 
 const config = {
     type: Phaser.AUTO,
@@ -55,32 +49,36 @@ const config = {
 
 const game = new Phaser.Game(config);
 
+// DONATE FUNCTION
+function showDonateOptions() {
+    let choice = prompt("Support LINEMAN GAME:\n\n1. MPESA: 0707649890\n2. PayPal\nType 1 for MPESA or 2 for PayPal");
+    if(choice == "1") {
+        alert("Send MPESA to: 0707649890\nName: LINEMAN GAME\nUse 'Donation' as reference\nThank you for supporting! 🙏⚡");
+    } else if(choice == "2") {
+        alert("PayPal coming soon!\nFor now please use MPESA: 0707649890");
+    }
+}
+
 function create() {
-    // SKY
-    this.add.rectangle(window.innerWidth/2, window.innerHeight/2, window.innerWidth, window.innerHeight, 0x87CEEB).setDepth(0);
+    // POLES
+    for(let i = 0; i < 5; i++){
+        this.add.rectangle(150 + i * 200, window.innerHeight - 120, 30, 300, 0x8B4513).setDepth(1);
+        this.add.rectangle(150 + i * 200, window.innerHeight - 270, 120, 6, 0x000).setDepth(1);
+    }
     
-// SKY BACKGROUND
-this.add.rectangle(window.innerWidth/2, window.innerHeight/2, window.innerWidth, window.innerHeight, 0x87CEEB).setDepth(0);
+    // LINEMAN
+    player = this.add.rectangle(window.innerWidth / 2, window.innerHeight - 100, 40, 70, 0xFF0000).setDepth(3);
+    this.add.circle(window.innerWidth / 2, window.innerHeight - 140, 18, 0xFFD700).setDepth(3);
+    this.physics.add.existing(player);
 
-// POLES - Brown with wires
-for(let i = 0; i < 5; i++){
-    this.add.rectangle(150 + i * 200, window.innerHeight - 120, 30, 300, 0x8B4513).setDepth(1);
-    this.add.rectangle(150 + i * 200, window.innerHeight - 270, 120, 6, 0x000).setDepth(1); // wires
-}
-
-// LINEMAN - BIG Red body + Yellow helmet
-player = this.add.rectangle(window.innerWidth / 2, window.innerHeight - 100, 40, 70, 0xFF0000).setDepth(3);
-this.add.circle(window.innerWidth / 2, window.innerHeight - 140, 18, 0xFFD700).setDepth(3);
-this.physics.add.existing(player);
-
-// BIRDS - Bigger black triangles
-for(let i = 0; i < 4; i++){
-    let bird = this.add.triangle(200 + i * 220, 180 + i * 80, 0, 30, 30, 0, 15, 30, 0x000).setDepth(2);
-    bird.setScale(1.5);
-    this.physics.add.existing(bird);
-    bird.body.velocity.x = -150;
-    birds.push(bird);
-}
+    // BIRDS
+    for(let i = 0; i < 4; i++){
+        let bird = this.add.triangle(200 + i * 220, 180 + i * 80, 0, 30, 30, 0, 15, 30, 0x000).setDepth(2);
+        bird.setScale(1.5);
+        this.physics.add.existing(bird);
+        bird.body.velocity.x = -150;
+        birds.push(bird);
+    }
 
     // CONTROLS
     document.getElementById('btnUp').ontouchstart = () => upPressed = true;
@@ -110,109 +108,7 @@ function update() {
     if(score > level * 400){ level++; }
     if(height < 0){ gameOver(this); }
 
-    document.getElementById('ui').innerHTML = `<div>LINEMAN TRAINING PRO</div>Level: ${level} | Score: ${score} | Height: ${Math.floor(height)}m`;
-}
-
-function gameOver(scene){
-    document.getElementById('gameOver').style.display = 'block';
-    document.getElementById('finalScore').innerText = `Final Score: ${score} | Level: ${level}`;
-    scene.scene.pause();
-}
-</script>
-</body>
-</html>
-    <button onclick="alert('Support the Game\nM-Pesa: 0707 649 890\nThank You! 🙏')">Support 50/-</button>
-</div>
-
-<script>
-const config = {
-    type: Phaser.AUTO,
-    width: window.innerWidth,
-    height: window.innerHeight,
-    backgroundColor: '#87CEEB',
-    physics: { default: 'arcade' },
-    scene: { create, update }
-};
-
-let player, poles = [], birds = [], height = 0, score = 0, level = 1, upPressed = false, downPressed = false;
-const game = new Phaser.Game(config);
-let game;
-let player, birds = [];
-let score = 0, level = 1, height = 0;
-let upPressed = false, downPressed = false;
-
-// DONATE FUNCTION
-function showDonateOptions() {
-    let choice = prompt("Support LINEMAN GAME:\n\n1. MPESA: 0707649890\n2. PayPal\nType 1 for MPESA or 2 for PayPal");
-    if(choice == "1") {
-        alert("Send MPESA to: 0707649890\nName: LINEMAN GAME\nUse 'Donation' as reference\nThank you for supporting! 🙏⚡");
-    } else if(choice == "2") {
-        alert("PayPal coming soon!\nFor now please use MPESA: 0707649890");
-    }
-}
-
-const config = {
-    function showDonateOptions() {
-    let choice = prompt("Support LINEMAN GAME:\n\n1. MPESA: 0707649890\n2. PayPal\n\nType 1 for MPESA or 2 for PayPal");
-    if(choice == "1") {
-        alert("Send MPESA to: 0707649890\nName: LINEMAN GAME\nUse 'Donation' as reference\nThank you for supporting! 🙏⚡");
-    } else if(choice == "2") {
-        alert("PayPal coming soon!\nFor now please use MPESA: 0707649890");
-    }
-    }
-function create() {
-    // SKY BACKGROUND
-    this.add.rectangle(window.innerWidth/2, window.innerHeight/2, window.innerWidth, window.innerHeight, 0x87CEEB).setDepth(0);
-    
-    // POLES - Brown with wires
-    for(let i = 0; i < 5; i++){
-        this.add.rectangle(150 + i * 200, window.innerHeight - 120, 30, 300, 0x8B4513).setDepth(1);
-        this.add.rectangle(150 + i * 200, window.innerHeight - 270, 120, 6, 0x000).setDepth(1); // wires
-    }
-    
-    // LINEMAN - BIG Red body + Yellow helmet
-    player = this.add.rectangle(window.innerWidth / 2, window.innerHeight - 100, 40, 70, 0xFF0000).setDepth(3);
-    this.add.circle(window.innerWidth / 2, window.innerHeight - 140, 18, 0xFFD700).setDepth(3);
-    this.physics.add.existing(player);
-
-    // BIRDS - Bigger black triangles
-    for(let i = 0; i < 4; i++){
-        let bird = this.add.triangle(200 + i * 220, 180 + i * 80, 0, 30, 30, 0, 15, 30, 0x000).setDepth(2);
-        bird.setScale(1.5);
-        this.physics.add.existing(bird);
-        bird.body.velocity.x = -150;
-        birds.push(bird);
-    }
-
-    // TOUCH CONTROLS
-    document.getElementById('btnUp').ontouchstart = () => upPressed = true;
-    document.getElementById('btnUp').ontouchend = () => upPressed = false;
-    document.getElementById('btnDown').ontouchstart = () => downPressed = true;
-    document.getElementById('btnDown').ontouchend = () => downPressed = false;
-}
-
-function update() {
-    let speed = 3 + level * 0.5;
-    
-    if (upPressed && player.y > 120) {
-        player.y -= speed;
-        height += 0.3;
-        score += 2;
-    }
-    if (downPressed && player.y < window.innerHeight - 100) player.y += speed;
-
-    birds.forEach(bird => {
-        bird.x += bird.body.velocity.x * 0.016;
-        if(bird.x < -50) bird.x = window.innerWidth + 50;
-        if(Phaser.Geom.Intersects.RectangleToRectangle(player.getBounds(), bird.getBounds())){
-            gameOver(this);
-        }
-    });
-
-    if(score > level * 400){ level++; }
-    if(height < 0){ gameOver(this); }
-
-    document.getElementById('ui').innerHTML = `<div>LINEMAN TRAINING PRO</div>Level: ${level} | Score: ${score} | Height: ${Math.floor(height)}m`;
+    document.getElementById('ui').innerHTML = `LINEMAN TRAINING PRO<br>Level: ${level} | Score: ${score} | Height: ${Math.floor(height)}m`;
 }
 
 function gameOver(scene){
