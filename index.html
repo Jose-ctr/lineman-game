@@ -1,130 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Lineman Training Pro</title>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Lineman Game ⚡</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
     <style>
-        body { margin: 0; background: #87CEEB; font-family: Arial; overflow: hidden; }
-        #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-                    background: rgba(0,0,0,0.8); color: white; padding: 20px; border-radius: 10px; 
-                    display: none; text-align: center; z-index: 1000; }
-        #score { position: absolute; top: 20px; left: 20px; color: white; font-size: 24px; z-index: 100; }
-        #level { position: absolute; top: 20px; right: 20px; color: white; font-size: 24px; z-index: 100; }
-        #donateBtn { position: absolute; top: 10px; right: 10px; background: #ff4444; color: white; 
-                     padding: 10px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; z-index: 100; }
-        #controls { position: absolute; bottom: 20px; width: 100%; text-align: center; z-index: 100; }
-        .btn { background: rgba(255,255,255,0.8); border: none; padding: 15px 25px; margin: 0 10px; 
-               font-size: 18px; border-radius: 10px; cursor: pointer; }
+        body { margin: 0; padding: 0; overflow: hidden; background: #87CEEB; }
+        canvas { display: block; }
+        #score { position: absolute; top: 10px; left: 10px; color: white; font-size: 24px; font-family: Arial; z-index: 100; }
+        #donateBtn { position: absolute; top: 10px; right: 10px; background: red; color: white; border: none; padding: 8px 12px; border-radius: 5px; z-index: 100; }
+        .controls { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: center; gap: 20px; z-index: 100; }
+        .controls button { width: 60px; height: 60px; font-size: 24px; }
+        #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px; border-radius: 10px; display: none; text-align: center; z-index: 200; }
     </style>
 </head>
 <body>
     <div id="score">SCORE: 0</div>
-    <div id="level">LEVEL: 1</div>
-    <button id="donateBtn" onclick="showDonateOptions()">💰 SUPPORT DEVELOPER</button>
+    <button id="donateBtn" onclick="showDonateOptions()">⚡ SUPPORT DEVELOPER</button>
+    
+    <div class="controls">
+        <button id="btnUp">↑</button>
+        <button id="btnDown">↓</button>
+    </div>
 
     <div id="gameOver">
-        <h2>GAME OVER!</h2>
+        <h2>GAME OVER</h2>
         <p id="finalScore"></p>
-        <button onclick="location.reload()">PLAY AGAIN</button>
-    </div>
-
-    <div id="controls">
-        <button class="btn" onmousedown="moveUp()" onmouseup="stopMove()" ontouchstart="moveUp()" ontouchend="stopMove()">↑</button>
-        <button class="btn" onmousedown="moveDown()" onmouseup="stopMove()" ontouchstart="moveDown()" ontouchend="stopMove()">↓</button>
+        <button onclick="location.reload()">RESTART</button>
     </div>
 
 <script>
-let score = 0;
-let level = 1;
-let movingUp = false;
-let movingDown = false;
-
-function moveUp() { movingUp = true; }
-function moveDown() { movingDown = true; }
-function stopMove() { movingUp = false; movingDown = false; }
-
-function showDonateOptions() {
-    const mpesaNumber = "0707649890"; 
-    navigator.clipboard.writeText(mpesaNumber);
-    alert(`ASANTE SANA! 🙏\n\nM-PESA NUMBER: ${mpesaNumber}\n\nNumber copied! Go to M-PESA > Send Money > Paste number.`);
-}
-
-</div>
-
-<script>
-let score = 0;
-let level = 1;
-let movingUp = false;
-let movingDown = false;
-
-function moveUp() { movingUp = true; }
-function moveDown() { movingDown = true; }
-function stopMove() { movingUp = false; movingDown = false; }
+let player, score = 0, gameOver = false;
+let upPressed = false, downPressed = false;
 
 function showDonateOptions() {
     const mpesaNumber = "0707649890";
     navigator.clipboard.writeText(mpesaNumber);
-    alert(`ASANTE SANA! 🙏\n\nM-PESA NUMBER: ${mpesaNumber}\n\nNumber copied!`);
+    alert(`ASANTE SANA! 🙏\n\nM-PESA NUMBER: ${mpesaNumber}\n\nNumber copied! Open M-PESA > Send Money > Paste number to support.`);
 }
 
+function getRating(score) {
+    if(score >= 1000) return {text: "LEGENDARY! 👑⚡", color: "#ffd700"};
+    else if(score >= 500) return {text: "EXCELLENT! ⚡🔥", color: "#ff5500"};
+    else if(score >= 100) return {text: "GOOD! 💪", color: "#ffaa00"};
+    else if(score >= 20) return {text: "FAIR 🙂", color: "#00aaff"};
+    else return {text: "KEEP TRYING! 💯", color: "#ffffff"};
+}
 
-// GAME CONFIG
 const config = {
     type: Phaser.AUTO,
     width: window.innerWidth,
     height: window.innerHeight - 100,
     backgroundColor: '#87CEEB',
-    physics: { default: 'arcade' },
-    scene: { preload, create, update }
-};
-    let player, scoreText, upPressed = false, downPressed = false, gameOver = false;
-
-function preload() {}
-
-function create() {
-    // SKY + CLOUDS
-    this.cameras.main.setBackgroundColor('#87CEEB');
-    for(let i = 0; i < 5; i++) {
-        this.add.ellipse(Phaser.Math.Between(0, config.width), Phaser.Math.Between(50, 200), 100, 50, 0xffffff, 0.6);
-    }
-
-    // YELLOW LINEMAN
-    player = this.add.rectangle(100, config.height/2, 40, 40, 0xffff00);
-    this.physics.add.existing(player);
-    player.body.setCollideWorldBounds(true);
-
-    // SCORE
-    scoreText = this.add.text(16, 16, 'SCORE: 0', { fontSize: '24px', fill: '#fff' });
-    scoreText.setDepth(100);
-
-// BUTTONS
-document.getElementById('btnUp').addEventListener('touchstart', () => upPressed = true);
-document.getElementById('btnUp').addEventListener('touchend', () => upPressed = false);
-
-document.getElementById('btnDown').addEventListener('touchstart', () => downPressed = true);
-document.getElementById('btnDown').addEventListener('touchend', () => downPressed = false);
-    
-    document.getElementById('btnDown').addEventListener('touchend', () => downPressed = false);
-}
-
-function update() {
-    if(gameOver) return;
-    if(upPressed) { player.y -= 5; score += 1; }
-    if(downPressed) { player.y += 5; }
-    scoreText.setText('SCORE: ' + score);
-    
-    if(player.y < 0 || player.y > config.height) {
-        gameOver = true;
-        document.getElementById('gameOver').style.display = 'block';
-    }
-}
-    
-const game = new Phaser.Game(config);
-
-const config = {
-    type: Phaser.AUTO,
-    width: window.innerWidth,
-    height: window.innerHeight,
     physics: {
         default: 'arcade',
         arcade: { gravity: { y: 0 }
@@ -138,58 +66,26 @@ const config = {
 
 const game = new Phaser.Game(config);
 
-// RATING FUNCTION
-function getRating(score) {
-    if(score >= 1000) {
-        return {text: "LEGENDARY! 👑⚡", color: "#ffd700"};
-    } else if(score >= 500) {
-        return {text: "EXCELLENT! ⚡🔥", color: "#00ff00"};
-    } else if(score >= 100) {
-    } else if(score >= 20) {
-        return {text: "FAIR 🙂", color: "#00aaff"};
-    } else {
-        return {text: "KEEP TRYING! 💯", color: "#ffffff"};
-    }
-}    return {text: "GOOD! 💪", color: "#ffaa00"};
-    
-    navigator.clipboard.writeText(mpesaNumber);
-    alert(`ASANTE SANA! 🙏\n\nM-PESA NUMBER: ${mpesaNumber}\n\nNumber copied! Open M-PESA > Send Money > Paste number to support.`);
-}
-// GAME VARIABLES
-let player;
-let cursors;
-let scoreText;
-let gameOver = false;
+function preload() {}
 
-// PRELOAD
-function preload() {
-    // nothing to load
-}
-
-// CREATE
 function create() {
-    this.cameras.main.setBackgroundColor('#87CEEB'); // SKY BLUE
-    
-    // Add clouds
-    for(let i = 0; i < 5; i++) {
-        this.add.ellipse(Phaser.Math.Between(0, config.width), Phaser.Math.Between(50, 200), 100, 50, 0xffffff, 0.6);
-    }
-
-    player = this.add.rectangle(100, 400, 40, 40, 0xffff00);
-    this.physics.add.existing(player);
+    // PLAYER - YELLOW SQUARE
+    player = this.physics.add.rectangle(100, 300, 40, 40, 0xffff00);
     player.body.setCollideWorldBounds(true);
 
-    scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#fff' });
-    scoreText.setDepth(100);
-
     // MOBILE BUTTONS
-document.getElementById('btnUp').addEventListener('touchstart', () => upPressed = true);
-document.getElementById('btnUp').addEventListener('touchend', () => upPressed = false);
-document.getElementById('btnDown').addEventListener('touchstart', () => downPressed = true);
-document.getElementById('btnDown').addEventListener('touchend', () => downPressed = false);
+    document.getElementById('btnUp').addEventListener('touchstart', () => upPressed = true);
+    document.getElementById('btnUp').addEventListener('touchend', () => upPressed = false);
+    document.getElementById('btnDown').addEventListener('touchstart', () => downPressed = true);
+    document.getElementById('btnDown').addEventListener('touchend', () => downPressed = false);
+
+    // KEYBOARD TOO
+    this.input.keyboard.on('keydown-UP', () => upPressed = true);
+    this.input.keyboard.on('keyup-UP', () => upPressed = false);
+    this.input.keyboard.on('keydown-DOWN', () => downPressed = true);
+    this.input.keyboard.on('keyup-DOWN', () => downPressed = false);
 }
 
-// UPDATE
 function update() {
     if(gameOver) return;
 
@@ -200,17 +96,17 @@ function update() {
     if(downPressed) {
         player.y += 5;
     }
-    
-    scoreText.setText('Score: ' + score);
 
-    // SIMPLE GAME OVER CHECK
+    document.getElementById('score').innerText = 'SCORE: ' + score;
+
+    // GAME OVER
     if(player.y < 0 || player.y > config.height) {
         gameOver = true;
         let rating = getRating(score);
-        document.getElementById('finalScore').innerHTML = `SCORE: ${score}<br><span style="color:${rating.color}">${rating.text}</span>`;
+        document.getElementById('finalScore').innerText = 'Score: ' + score + ' - ' + rating.text;
         document.getElementById('gameOver').style.display = 'block';
     }
-        
+}
 </script>
 </body>
 </html>
