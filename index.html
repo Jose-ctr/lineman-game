@@ -48,6 +48,20 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
+const game = new Phaser.Game(config);
+
+// RATING FUNCTION
+function getRating(score) {
+    if(score >= 50) {
+        return {text: "EXCELLENT! ⚡🔥", color: "#00ff00"};
+    } else if(score >= 20) {
+        return {text: "GOOD! 💪", color: "#ffaa00"};
+    } else if(score >= 5) {
+        return {text: "FAIR 🙂", color: "#00aaff"};
+    } else {
+        return {text: "KEEP TRYING! 💯", color: "#ff4444"};
+    }
+}
 
 // DONATE FUNCTION - OPEN MPESA APP
 function showDonateOptions() {
@@ -113,10 +127,16 @@ function update() {
 }
 
 function gameOver(scene){
+    // Get rating based on score
+    let rating = getRating(score);
+    
     document.getElementById('gameOver').style.display = 'block';
-    document.getElementById('finalScore').innerText = `Final Score: ${score} | Level: ${level}`;
+    document.getElementById('finalScore').innerHTML = `
+        SCORE: ${score}<br>
+        <span style="color: ${rating.color}; font-size: 28px; font-weight: bold;">${rating.text}</span>
+    `;
     scene.scene.pause();
-}
+    }
 </script>
 </body>
 </html>
