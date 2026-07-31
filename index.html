@@ -2,20 +2,25 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lineman OFFLINE</title>
+<title>Lineman 2P Mobile</title>
 <style>
-body{background:#000;color:#0f0;text-align:center;margin:0;padding:10px;font-family:Arial}
-h1{margin:5px}
+body{background:#000;color:#0f0;text-align:center;margin:0;padding:10px}
 canvas{background:#000;border:2px solid #0f0;display:block;margin:10px auto;touch-action:none}
-button{padding:14px 18px;margin:4px;font-size:18px;border:none;border-radius:8px;font-weight:bold;touch-action:none}
-#draw{background:orange;color:#000;width:170px;height:65px;font-size:22px}
-.controls button{width:65px;height:65px;background:#222;color:#fff;font-size:26px}
+button{padding:12px;font-size:16px;border:none;border-radius:8px;font-weight:bold;touch-action:none}
+.draw1{background:cyan;color:#000;width:140px;height:60px}
+.draw2{background:orange;color:#000;width:140px;height:60px}
+.controls button{width:60px;height:60px;background:#222;color:#fff;font-size:22px}
+.row{display:flex;justify-content:center;gap:10px;margin:5px}
 </style>
 </head>
 <body>
-<h1>LINEMAN OFFLINE</h1>
-<div>P1: W A S D + SPACE | P2: Arrows + SHIFT</div>
+<h1 style="color:#0f0">LINEMAN 2P</h1>
 <canvas id="c" width="340" height="280"></canvas>
+
+<div class="row">
+<button class="draw1" id="draw1">P1 DRAW</button>
+<button class="draw2" id="draw2">P2 DRAW</button>
+</div>
 
 <div class="controls">
 <button id="up">↑</button><br>
@@ -23,16 +28,15 @@ button{padding:14px 18px;margin:4px;font-size:18px;border:none;border-radius:8px
 <button id="down">↓</button>
 <button id="right">→</button>
 </div>
-<button id="draw">DRAW</button>
 <button id="reset">RESET</button>
 
 <script>
 const c=document.getElementById('c'),ctx=c.getContext('2d');
-let p1={x:90,y:140,col:'cyan',alive:true,line:[],drawing:false};
-let p2={x:250,y:140,col:'orange',alive:true,line:[],drawing:false};
-let keys={};
+let p1={x:90,y:140,col:'cyan',alive:true,line:[],d:false};
+let p2={x:250,y:140,col:'orange',alive:true,line:[],d:false};
+let dir={x:0,y:0},active=1;
 
-function drawGame(){
+function draw(){
 ctx.fillStyle='#000';ctx.fillRect(0,0,340,280);
 [p1,p2].forEach(p=>{
 if(!p.alive)return;
@@ -41,38 +45,28 @@ ctx.strokeStyle=p.col;ctx.lineWidth=3;
 p.line.forEach(seg=>{ctx.beginPath();ctx.moveTo(seg[0].x,seg[0].y);seg.forEach(pt=>ctx.lineTo(pt.x,pt.y));ctx.stroke();})
 });
 }
-function move(p,dx,dy){
+function move(){
+let p=active==1?p1:p2;
 if(!p.alive)return;
-p.x+=dx;p.y+=dy;
+p.x+=dir.x;p.y+=dir.y;
 p.x=Math.max(0,Math.min(340,p.x));p.y=Math.max(0,Math.min(280,p.y));
-if(p.drawing){
-if(p.line.length==0)p.line.push([{x:p.x,y:p.y}]);
-p.line[p.line.length-1].push({x:p.x,y:p.y});
-}
-}
-function check(){
-[p1,p2].forEach(me=>[p1,p2].forEach(other=>{
-if(me!=other)other.line.flat().forEach(pt=>{if(Math.abs(me.x-pt.x)<6&&Math.abs(me.y-pt.y)<6)me.alive=false;})
-}))}
-setInterval(()=>{
-if(keys['w'])move(p1,0,-2.5);if(keys['s'])move(p1,0,2.5);if(keys['a'])move(p1,-2.5,0);if(keys['d'])move(p1,2.5,0);
-if(keys['ArrowUp'])move(p2,0,-2.5);if(keys['ArrowDown'])move(p2,0,2.5);if(keys['ArrowLeft'])move(p2,-2.5,0);if(keys['ArrowRight'])move(p2,2.5,0);
-check();drawGame();
-},33);
+if(p.d){if(p.line.length==0)p.line.push([{x:p.x,y:p.y}]);p.line[p.line.length-1].push({x:p.x,y:p.y});}
+setInterval(()=>{move();draw();},40);
 
-window.addEventListener('keydown',e=>{keys[e.key]=true;if(e.key==' ')p1.drawing=true;if(e.key=='Shift')p2.drawing=true;});
-window.addEventListener('keyup',e=>{keys[e.key]=false;if(e.key==' ')p1.drawing=false;if(e.key=='Shift')p2.drawing=false;});
-
-// TOUCH ZA SIMU
-let p1Touch=false, p2Touch=false;
-document.getElementById('draw').addEventListener('touchstart',e=>{e.preventDefault();p1Touch=true;p1.drawing=true});
-document.getElementById('draw').addEventListener('touchend',e=>{e.preventDefault();p1Touch=false;p1.drawing=false});
+function setDir(x,y){dir.x=x;dir.y=y}
 ['up','down','left','right'].forEach(id=>{
-document.getElementById(id).addEventListener('touchstart',e=>{e.preventDefault();keys[id]=true;p2Touch=true});
-document.getElementById(id).addEventListener('touchend',e=>{e.preventDefault();keys[id]=false;p2Touch=false});
+document.getElementById(id).ontouchstart=()=>{
+if(id=='up')setDir(0,-3);if(id=='down')setDir(0,3);
+if(id=='left')setDir(-3,0);if(id=='right')setDir(3,0);
+};
+document.getElementById(id).ontouchend=()=>setDir(0,0);
 });
+document.getElementById('draw1').ontouchstart=()=>{active=1;p1.d=true};
+document.getElementById('draw1').ontouchend=()=>p1.d=false;
+document.getElementById('draw2').ontouchstart=()=>{active=2;p2.d=true};
+document.getElementById('draw2').ontouchend=()=>p2.d=false;
 document.getElementById('reset').onclick=()=>location.reload();
-drawGame();
+draw();
 </script>
 </body>
 </html>
