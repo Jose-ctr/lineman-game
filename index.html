@@ -7,19 +7,14 @@
 <style>
     body { margin:0; background:#111; color:white; font-family:Arial; text-align:center; overflow:hidden; touch-action: none; }
     canvas { background:#000; border:2px solid #444; display:block; margin:10px auto; max-width:95vw; max-height:50vh; }
-    #ui { margin-top:10px; font-size:12px; }
     button { padding:12px 20px; font-size:16px; margin:5px; background:#00aaff; border:none; color:white; border-radius:8px; cursor:pointer; font-weight:bold; }
-    button:hover { background:#0088cc; }
     #roomCode { font-size:22px; color:#0f0; font-weight:bold; margin:10px; }
     #status { margin:10px; font-size:18px; }
     input { padding:12px; border-radius:5px; border:none; font-size:16px; width:200px; }
-    
-    /* MOBILE CONTROLS */
-   .mobile-controls { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; max-width:400px; margin:10px auto; }
-   .dpad { display:grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap:5px; }
-   .btn { background:#333; border:2px solid #555; padding:15px; border-radius:10px; font-size:20px; user-select:none; }
-   .btn:active { background:#555; }
-    #drawBtn { background:#ff8800; grid-column: 3; grid-row: 2; }
+  .mobile-controls { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; max-width:400px; margin:10px auto; }
+ .btn { background:#333; border:2px solid #555; padding:20px; border-radius:10px; font-size:24px; user-select:none; color:white; }
+ .btn:active { background:#555; }
+    #drawBtn { background:#ff8800; }
     #drawBtn.active { background:#ffaa00; }
 </style>
 <script type="importmap">
@@ -42,34 +37,27 @@
 </div>
 <div id="roomCode"></div>
 <canvas id="gameCanvas" width="800" height="600"></canvas>
-<div id="ui">
-    PC: WASD/Arrows + SPACE | Mobile: Use buttons below
-</div>
 
-<!-- MOBILE BUTTONS -->
 <div class="mobile-controls">
     <div></div>
-    <button class="btn" ontouchstart="pressKey('w')" ontouchend="releaseKey('w')">↑</button>
+    <button class="btn" ontouchstart="keys['w']=true" ontouchend="keys['w']=false">↑</button>
     <div></div>
-    <button class="btn" ontouchstart="pressKey('a')" ontouchend="releaseKey('a')">←</button>
-    <button class="btn" ontouchstart="pressKey('s')" ontouchend="releaseKey('s')">↓</button>
-    <button class="btn" ontouchstart="pressKey('d')" ontouchend="releaseKey('d')">→</button>
+    <button class="btn" ontouchstart="keys['a']=true" ontouchend="keys['a']=false">←</button>
+    <button class="btn" ontouchstart="keys['s']=true" ontouchend="keys['s']=false">↓</button>
+    <button class="btn" ontouchstart="keys['d']=true" ontouchend="keys['d']=false">→</button>
     <div></div>
-    <button class="btn" id="drawBtn" ontouchstart="pressKey(' ')" ontouchend="releaseKey(' ')">DRAW</button>
+    <button class="btn" id="drawBtn" ontouchstart="keys[' ']=true; this.classList.add('active')" ontouchend="keys[' ']=false; this.classList.remove('active')">DRAW</button>
 </div>
 
 <script type="module">
 import { initializeApp } from "firebase/app";
-import { getDatabase, ref, set, onValue, update } from "firebase/database";
+import { getDatabase, ref, set, onValue, update, push, remove } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: "AIzaSyALO95KtE3U9y8nAxtiVEjvPAx-fQ09srA",
   authDomain: "lineman-game.firebaseapp.com",
   databaseURL: "https://lineman-game-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "lineman-game",
-  storageBucket: "lineman-game.firebasestorage.app",
-  messagingSenderId: "753516093396",
-  appId: "1:753516093396:web:cdc265060cc68ba72f0041"
+  projectId: "lineman-game"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -79,31 +67,16 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 let roomId = null;
 let playerId = null;
-let gameState = { players:{}, lines:[] };
+let gameState = { players:{}, lines:{} };
 let keys = {};
-let drawing = false;
 let lastPos = {};
 
-document.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
-document.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
-
-// FOR MOBILE BUTTONS
-window.pressKey = (k) => { keys[k] = true; if(k===' ') document.getElementById('drawBtn').classList.add('active'); }
-window.releaseKey = (k) => { keys[k] = false; if(k===' ') document.getElementById('drawBtn').classList.remove('active'); }
-
-function randomCode() {
-    return Math.random().toString(36).substring(2, 6).toUpperCase();
-}
-
 window.createRoom = () => {
-    roomId = randomCode();
+    roomId = Math.random().toString(36).substring(2, 6).toUpperCase();
     playerId = 'p1';
     document.getElementById('roomCode').innerText = 'Room Code: ' + roomId;
     document.getElementById('status').innerText = 'Waiting for Player 2...';
-    set(ref(db, 'rooms/' + roomId), {
-        players: { p1: { x:100, y:300, color:'cyan', alive:true } },
-        lines: []
-    });
+    set(ref(db, 'rooms/' + roomId), { players: { p1: { x:100, y:300, color:'cyan', alive:true } });
     listenRoom();
 }
 
@@ -111,97 +84,69 @@ window.joinRoom = () => {
     roomId = document.getElementById('joinInput').value.toUpperCase();
     playerId = 'p2';
     document.getElementById('roomCode').innerText = 'Room Code: ' + roomId;
-    set(ref(db, 'rooms/' + roomId + '/players/p2'), { x:700, y:300, color:'orange', alive:true });
-    document.getElementById('status').innerText = 'Game Started!';
+    update(ref(db, 'rooms/' + roomId + '/players'), { p2: { x:700, y:300, color:'orange', alive:true } });
     listenRoom();
 }
 
 window.restartGame = () => {
     if(!roomId) return;
-    set(ref(db, 'rooms/' + roomId), {
-        players: { 
-            p1: { x:100, y:300, color:'cyan', alive:true },
-            p2: { x:700, y:300, color:'orange', alive:true }
-        },
-        lines: []
+    set(ref(db, 'rooms/' + roomId + '/players'), { 
+        p1: { x:100, y:300, color:'cyan', alive:true },
+        p2: { x:700, y:300, color:'orange', alive:true }
     });
+    set(ref(db, 'rooms/' + roomId + '/lines'), null);
 }
 
 function listenRoom() {
     onValue(ref(db, 'rooms/' + roomId), (snapshot) => {
-        gameState = snapshot.val();
-        if(gameState) draw();
+        gameState = snapshot.val() || {players:{}, lines:{}};
+        if(gameState.players && Object.keys(gameState.players).length >= 2) {
+            document.getElementById('status').innerText = 'Game Started! Hold DRAW + Move';
+        }
+        draw();
     });
 }
 
-function checkCollision(x, y, color) {
-    for(let pt of gameState.lines) {
-        let dist = Math.sqrt((pt.x2-x)*(pt.x2-x) + (pt.y2-y)*(pt.y2-y));
-        if(dist < 10 && pt.color!== color) {
-            return true;
-        }
-    }
-    return false;
-}
-
 function updatePlayer() {
-    if(!roomId ||!playerId ||!gameState.players ||!gameState.players[playerId]) return;
+    if(!roomId ||!playerId ||!gameState.players[playerId]) return;
     let p = gameState.players[playerId];
     if(!p.alive) return;
 
-    let oldX = p.x, oldY = p.y;
     if(keys['w']) p.y -= 4;
     if(keys['s']) p.y += 4;
     if(keys['a']) p.x -= 4;
     if(keys['d']) p.x += 4;
-    
     p.x = Math.max(10, Math.min(790, p.x));
     p.y = Math.max(10, Math.min(590, p.y));
 
-    // Draw line when DRAW is held
-    if(keys[' ']) {
-        if(lastPos[playerId]) {
-            gameState.lines.push({x1:lastPos[playerId].x, y1:lastPos[playerId].y, x2:p.x, y2:p.y, color:p.color});
-        }
-        lastPos[playerId] = {x:p.x, y:p.y};
-    } else {
-        lastPos[playerId] = null;
+    if(keys[' '] && lastPos[playerId]) {
+        push(ref(db, 'rooms/' + roomId + '/lines'), {x1:lastPos[playerId].x, y1:lastPos[playerId].y, x2:p.x, y2:p.y, color:p.color});
     }
-    
-    if(keys['k']) { gameState.lines = []; }
+    lastPos[playerId] = keys[' ']? {x:p.x, y:p.y} : null;
 
-    // Check collision
-    if(checkCollision(p.x, p.y, p.color)) {
-        p.alive = false;
-        document.getElementById('status').innerText = playerId + ' DIED! Press Restart';
-    }
-
-    update(ref(db, 'rooms/' + roomId + '/players/' + playerId), p);
-    update(ref(db, 'rooms/' + roomId + '/lines'), gameState.lines);
+    update(ref(db, 'rooms/' + roomId + '/players/' + playerId), {x:p.x, y:p.y, alive:p.alive});
 }
 
 function draw() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0,0,800,600);
-    
-    // Draw lines
     ctx.lineWidth = 4;
-    gameState.lines.forEach(pt => { 
+    for(let id in gameState.lines) {
+        let pt = gameState.lines[id];
         ctx.strokeStyle = pt.color; 
         ctx.beginPath();
         ctx.moveTo(pt.x1, pt.y1);
         ctx.lineTo(pt.x2, pt.y2);
         ctx.stroke();
-    });
-    
-    // Draw players
+    }
     for(let id in gameState.players){
         let p = gameState.players[id];
-        if(!p.alive) continue;
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 10, 0, Math.PI*2);
-        ctx.fill();
+        if(p.alive){
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 10, 0, Math.PI*2);
+            ctx.fill();
+        }
     }
 }
 setInterval(updatePlayer, 1000/60);
