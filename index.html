@@ -69,9 +69,11 @@ const game = new Phaser.Game(config);
 function preload() {}
 
 function create() {
-    // PLAYER - YELLOW SQUARE
-    player = this.physics.add.rectangle(100, 300, 40, 40, 0xffff00).setOrigin(0.5);
+    // PLAYER - YELLOW SQUARE - THIS WILL 100% SHOW
+    player = this.add.rectangle(100, 300, 40, 40, 0xffff00).setOrigin(0.5);
+    this.physics.add.existing(player);
     player.body.setCollideWorldBounds(true);
+    player.body.setImmovable(true);
 
     // MOBILE BUTTONS
     document.getElementById('btnUp').addEventListener('touchstart', () => upPressed = true);
@@ -79,7 +81,7 @@ function create() {
     document.getElementById('btnDown').addEventListener('touchstart', () => downPressed = true);
     document.getElementById('btnDown').addEventListener('touchend', () => downPressed = false);
 
-    // KEYBOARD TOO
+    // KEYBOARD
     this.input.keyboard.on('keydown-UP', () => upPressed = true);
     this.input.keyboard.on('keyup-UP', () => upPressed = false);
     this.input.keyboard.on('keydown-DOWN', () => downPressed = true);
