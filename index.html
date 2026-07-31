@@ -33,7 +33,6 @@
 <script>
 let player, score = 0, gameOver = false, poles, birds;
 let upPressed = false, downPressed = false;
-let wireGraphics;
 
 function showDonateOptions() {
     const mpesaNumber = "0707649890";
@@ -52,30 +51,33 @@ const config = {
 
 const game = new Phaser.Game(config);
 
-function preload() {}
+function preload() {
+    // LOAD IMAGES FROM INTERNET - NO UPLOAD NEEDED
+    this.load.image('pole', 'https://cdn-icons-png.flaticon.com/512/619/619034.png'); // Electric pole
+    this.load.image('bird', 'https://cdn-icons-png.flaticon.com/512/3069/3069172.png'); // Bird
+    this.load.image('lineman', 'https://cdn-icons-png.flaticon.com/512/2922/2922656.png'); // Worker
+}
 
 function create() {
-    // WIRE GRAPHICS
-    wireGraphics = this.add.graphics();
-
-    // POLES GROUP
+    // POLES
     poles = this.physics.add.group();
     for(let i = 0; i < 5; i++) {
-        let pole = poles.create(300 + i * 400, config.height - 100, null);
-        pole.setSize(20, 200).setVisible(false);
+        let pole = poles.create(300 + i * 400, this.game.config.height - 50, 'pole');
+        pole.setScale(0.15);
+        pole.setVelocityX(-3);
     }
 
-    // BIRDS GROUP  
+    // BIRDS
     birds = this.physics.add.group();
     for(let i = 0; i < 3; i++) {
-        let bird = birds.create(500 + i * 500, 200 + i * 50, null);
-        bird.setSize(30, 20).setVisible(false);
+        let bird = birds.create(500 + i * 500, 200 + i * 50, 'bird');
+        bird.setScale(0.08);
         bird.setVelocityX(-100);
     }
 
-    // LINEMAN - YELLOW RECTANGLE FOR NOW
-    player = this.add.rectangle(100, 300, 30, 50, 0xffff00).setOrigin(0.5);
-    this.physics.add.existing(player);
+    // LINEMAN
+    player = this.physics.add.sprite(100, 300, 'lineman');
+    player.setScale(0.12);
     player.body.setCollideWorldBounds(true);
 
     // COLLISIONS
@@ -92,35 +94,28 @@ function create() {
 function update() {
     if(gameOver) return;
 
-    // DRAW WIRE
-    wireGraphics.clear();
-    wireGraphics.lineStyle(4, 0x000000);
-    poles.getChildren().forEach(pole => {
-        wireGraphics.lineBetween(100, player.y, pole.x, pole.y - 100);
-    });
-
     // MOVE PLAYER
     if(upPressed) { player.y -= 4; score++; }
     if(downPressed) { player.y += 4; }
     document.getElementById('score').innerText = 'SCORE: ' + score;
 
-    // MOVE POLES
+    // LOOP POLES
     poles.getChildren().forEach(pole => {
         pole.x -= 3;
-        if(pole.x < -50) pole.x = config.width + 50;
+        if(pole.x < -50) pole.x = this.game.config.width + 50;
     });
 
-    // MOVE BIRDS
+    // LOOP BIRDS
     birds.getChildren().forEach(bird => {
         bird.x -= 4;
         if(bird.x < -50) {
-            bird.x = config.width + 50;
+            bird.x = this.game.config.width + 50;
             bird.y = Phaser.Math.Between(100, 400);
         }
     });
 
     // GAME OVER
-    if(player.y < 0 || player.y > config.height) {
+    if(player.y < 0 || player.y > this.game.config.height) {
         gameOver = true;
         document.getElementById('finalScore').innerText = 'Final Score: ' + score;
         document.getElementById('gameOver').style.display = 'block';
