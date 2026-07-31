@@ -6,9 +6,10 @@
 body{margin:0;background:#87CEEB;overflow:hidden;font-family:Arial}
 #score{position:absolute;top:10px;left:10px;font-size:20px;font-weight:bold;color:#fff;text-shadow:2px 2px 0 #000;z-index:1}
 #mpesa{position:absolute;top:10px;right:10px;background:#00A651;color:#fff;padding:8px 12px;border-radius:8px;font-weight:bold;z-index:2}
-button{position:absolute;bottom:20px;width:80px;height:80px;border-radius:50%;font-size:40px;border:3px solid #fff;background:#2F4F4F;color:#fff}
-#up{left:25%}
-#down{right:25%}
+button{position:absolute;bottom:20px;width:90px;height:90px;border-radius:50%;font-size:35px;border:3px solid #fff;background:#2F4F4F;color:#fff}
+#up{left:15%}
+#down{left:40%}
+#jump{right:15%;background:#FF8C00;width:100px;height:100px} /* BIG ORANGE JUMP */
 #restart{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:200px;height:60px;border-radius:20px;font-size:24px;background:#FF0000;display:none}
 #gameover{position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);font-size:48px;color:#FF0000;font-weight:bold;text-shadow:3px 3px 0 #fff;display:none}
 </style>
@@ -20,25 +21,28 @@ button{position:absolute;bottom:20px;width:80px;height:80px;border-radius:50%;fo
 <button id="restart">RESTART</button>
 <button id="up">↑</button>
 <button id="down">↓</button>
+<button id="jump">JUMP</button>
 <canvas id="c"></canvas>
 <script>
 let c=document.getElementById('c'),x=c.getContext('2d');
 c.width=innerWidth;c.height=innerHeight;
-let px=100,py=c.height/2,s=0,up=0,down=0,gameOver=false;
-let gap=180; // size of gap between poles
-let poles=[{x:300,gapY:200},{x:600,gapY:350},{x:900,gapY:250}];
-let birds=[{x:450,y:150},{x:750,y:500},{x:1050,y:300}];
+let px=100,py=c.height/2,vy=0,s=0,up=0,down=0,gameOver=false;
+let gap=200; // bigger gap
+let poleDistance=350; // poles further apart
+let poles=[{x:400,gapY:200},{x:400+poleDistance,gapY:350},{x:400+poleDistance*2,gapY:250}];
+let birds=[{x:575,y:150},{x:575+poleDistance,y:500}];
 
 document.getElementById('up').ontouchstart=()=>up=1;
 document.getElementById('up').ontouchend=()=>up=0;
 document.getElementById('down').ontouchstart=()=>down=1;
 document.getElementById('down').ontouchend=()=>down=0;
+document.getElementById('jump').ontouchstart=()=>vy=-12; // JUMP POWER
 document.getElementById('restart').onclick=reset;
 
 function reset(){
-  s=0; py=c.height/2; gameOver=false;
-  poles=[{x:300,gapY:200},{x:600,gapY:350},{x:900,gapY:250}];
-  birds=[{x:450,y:150},{x:750,y:500},{x:1050,y:300}];
+  s=0; py=c.height/2; vy=0; gameOver=false;
+  poles=[{x:400,gapY:200},{x:400+poleDistance,gapY:350},{x:400+poleDistance*2,gapY:250}];
+  birds=[{x:575,y:150},{x:575+poleDistance,y:500}];
   document.getElementById('gameover').style.display='none';
   document.getElementById('restart').style.display='none';
   loop();
@@ -47,29 +51,35 @@ function reset(){
 function loop(){
   if(gameOver) return;
   
-  let speed = Math.min(8, 3 + Math.floor(s/1000));
+  let speed = Math.min(7, 2 + Math.floor(s/1500)); // slower ramp up, max 7
   x.clearRect(0,0,c.width,c.height);
   
-  if(up){py-=5; s = s + 0.1}
-  if(down){py+=5}
-  if(py<0)py=0; if(py>c.height-60)py=c.height-60;
+  // GRAVITY PHYSICS
+  if(up){vy-=0.3}
+  if(down){vy+=0.3}
+  vy+=0.4; // gravity
+  py+=vy;
+  s = s + 0.1;
+  
+  if(py<0){py=0;vy=0} 
+  if(py>c.height-60){py=c.height-60;vy=0}
   
   document.getElementById('score').innerText='SCORE: '+Math.floor(s)+' SPEED: '+speed;
 
-  // draw poles WITH GAPS
+  // draw poles WITH BIGGER GAPS AND DISTANCE
   x.fillStyle='#8B4513';
   poles.forEach(p=>{
     p.x-=speed;
     if(p.x<-50){
-      p.x=c.width+50;
-      p.gapY=Math.random()*(c.height-gap-100)+50; // random gap position
+      p.x=poles[poles.indexOf(p)-1 ? poles.indexOf(p)-1 : poles.length-1].x + poleDistance;
+      p.gapY=Math.random()*(c.height-gap-120)+60; // random gap
     }
-    // top part of pole
+    // top part
     x.fillRect(p.x,0,10,p.gapY);
-    // bottom part of pole
+    // bottom part
     x.fillRect(p.x,p.gapY+gap,10,c.height);
     
-    // COLLISION - only if in pole x and NOT in gap
+    // COLLISION
     if(px+20 > p.x && px < p.x+10){
       if(py < p.gapY || py+30 > p.gapY+gap) gameOver=true;
     }
@@ -79,7 +89,7 @@ function loop(){
   x.fillStyle='#000';
   birds.forEach(b=>{
     b.x-=(speed+1);
-    if(b.x<-50){b.x=c.width+Math.random()*200;b.y=Math.random()*(c.height-200)+100}
+    if(b.x<-50){b.x=poles[poles.length-1].x+100;b.y=Math.random()*(c.height-200)+100}
     x.beginPath();x.arc(b.x,b.y,8,0,Math.PI*2);x.fill();
     let dx=px+10-b.x, dy=py+15-b.y;
     if(Math.sqrt(dx*dx+dy*dy) < 18) gameOver=true;
