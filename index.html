@@ -81,14 +81,37 @@ function loop(){
       p.x-=5;
       if(p.x<-40){p.x=400+poleDistance; p.gapY=Math.random()*c.height}
       // Collision
-      if(px> p.x && px< p.x+40 && (py< p.gapY-gap/2 || py> p.gapY+gap/2)) gameOver()
+// Collision
+      if(px> p.x && px< p.x+40 && (py< p.gapY-gap/2 || py> p.gapY+gap/2)){gameOver()}
     });
-    
-    s++; document.getElementById('score').innerText="SCORE: "+Math.floor(s/10);
+
+    s++; document.getElementById('score').innerText="SCORE: "+s
   }
   requestAnimationFrame(loop)
 }
 function gameOver(){
+  game=0;
+  document.getElementById('gameover').style.display='block';
+  document.getElementById('restart').style.display='block';
+}
+
+// Controls
+document.getElementById('up').ontouchstart=()=>up=1;
+document.getElementById('up').ontouchend=()=>up=0;
+document.getElementById('down').ontouchstart=()=>down=1;
+document.getElementById('down').ontouchend=()=>down=0;
+document.getElementById('jump').onclick=()=>{if(game)vy=-10};
+
+function resetGame(){
+  game=1; s=0; px=100; py=c.height/2; vy=0;
+  poles=[{x:400,gapY:200},{x:400+poleDistance,gapY:250}];
+  document.getElementById('gameover').style.display='none';
+  document.getElementById('restart').style.display='none';
+}
+document.getElementById('restart').onclick=resetGame;
+
+loop();
+</script>
   game=0;
   document.getElementById('gameover').style.display='block';
   document.getElementById('restart').style.display='block';
