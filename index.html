@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -5,11 +7,13 @@
 <style>
 body{margin:0;font-family:sans-serif;overflow:hidden;background:#87CEEB}
 #gameArea{position:relative;width:100vw;height:70vh}
-#score{position:absolute;top:10px;left:10px;font-size:24px;font-weight:bold}
+#score{position:absolute;top:10px;left:10px;font-size:24px;font-weight:bold;color:white;text-shadow:2px 2px 4px black}
+#rating{position:absolute;top:45px;left:10px;font-size:18px;font-weight:bold;color:#25D366;text-shadow:1px 1px 2px black}
+#highscore{position:absolute;top:10px;right:150px;font-size:16px;background:black;color:gold;padding:5px 10px;border-radius:5px;font-weight:bold}
 #mpesa{position:absolute;top:10px;right:10px;font-size:16px;background:white;padding:5px 10px;border-radius:5px;color:red;font-weight:bold}
-#gameover{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:none;z-index:10;font-size:40px;color:red;font-weight:bold}
+#gameover{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:none;z-index:10;font-size:40px;color:red;font-weight:bold;text-shadow:2px 2px 4px black}
 #restart{position:absolute;top:60%;left:50%;transform:translate(-50%,-50%);display:none;z-index:10;padding:10px 20px;font-size:18px;background:#25D366;color:white;border:none;border-radius:10px}
-.gameBtn{position:absolute;bottom:20px;width:80px;height:80px;border-radius:50%;font-size:30px;background:#333;color:white;border:none}
+.gameBtn{position:absolute;bottom:20px;width:80px;height:80px;border-radius:50%;font-size:30px;background:#333;color:white;border:none;opacity:0.8}
 #up{left:20px;bottom:120px}
 #down{left:20px}
 #jump{right:20px}
@@ -32,7 +36,9 @@ canvas{position:absolute;top:0;left:0}
 <body>
 <div id="gameArea">
 <div id="score">SCORE: 0</div>
-<div id="mpesa">M-PESA: 0707649890</div> 
+<div id="rating"></div>
+<div id="highscore">BEST: 0</div>
+<div id="mpesa">M-PESA: 0707649890</div>  <!-- CHANGE THIS TO YOUR NUMBER -->
 <canvas id="c"></canvas>
 <div id="gameover">GAME OVER</div>
 <button id="restart">SUPPORT THE DEV - PAY 5BOB</button>
@@ -43,7 +49,7 @@ canvas{position:absolute;top:0;left:0}
 <div id="startScreen">
   <h2>SUPPORT THE DEVELOPER</h2>
   <p>Send any amount to:</p>
-  <div id="mpesaBig">M-PESA: 0707649890</div>
+  <div id="mpesaBig">M-PESA: 0707649890</div>  <!-- CHANGE THIS TOO -->
   <p>Then tap START</p>
   <button id="startBtn">START GAME</button>
   <div id="thankYou">THANK YOU FOR YOUR SUPPORT! 🙏</div>
@@ -65,13 +71,17 @@ canvas{position:absolute;top:0;left:0}
 <script>
 let c=document.getElementById('c'), x=c.getContext('2d');
 c.width=innerWidth; c.height=document.getElementById('gameArea').offsetHeight;
-let px=100,py=c.height/2,vy=0,s=0,up=0,down=0,game=0;
+let px=100,py=c.height/2,vy=0,s=0,up=0,down=0,game=0,high=0;
 let gap=200; let poleDistance=350;
 let poles=[{x:400,gapY:200},{x:400+poleDistance,gapY:250}];
 
+// Load High Score
+high = localStorage.getItem('linemanHigh') || 0;
+document.getElementById('highscore').innerText="BEST: "+high;
+
 // YOUR PHOTO - FROM FILE
 let linemanImg = new Image();
-linemanImg.src = "Lineman.png";
+linemanImg.src = "Lineman.png";  // CAPITAL L kama kwa GitHub
 
 function loop(){
   if(game){
@@ -97,16 +107,31 @@ function loop(){
       if(px> p.x && px< p.x+40 && (py< p.gapY-gap/2 || py> p.gapY+gap/2)){gameOver()}
     });
 
-    s++; document.getElementById('score').innerText="SCORE: "+s
+    s++; 
+    document.getElementById('score').innerText="SCORE: "+s;
+
+    // RATING SYSTEM
+    let ratingText = "";
+    if(s < 10) ratingText = "FAIR";
+    else if(s < 25) ratingText = "GOOD 🔥";
+    else if(s < 50) ratingText = "EXCELLENT ⚡";
+    else ratingText = "LEGENDARY 👑";
+    document.getElementById('rating').innerText = ratingText;
   }
   requestAnimationFrame(loop)
 }
 
 function gameOver(){
   game=0;
+  // Save High Score
+  if(s > high){
+    high = s;
+    localStorage.setItem('linemanHigh', high);
+    document.getElementById('highscore').innerText="BEST: "+high;
+  }
   document.getElementById('gameover').style.display='block';
   document.getElementById('restart').style.display='block';
-  document.getElementById('startScreen').style.display='flex';
+  document.getElementById('startScreen').style.display='flex'; // Rudi kwa support screen
 }
 
 function resetGame(){
@@ -134,13 +159,4 @@ document.getElementById('jump').onclick=()=>{if(game)vy=-10};
 function send(){
   let msg=document.getElementById('input').value;
   if(msg){
-    document.getElementById('chat').innerHTML += `<div class="msg">${msg}</div>`;
-    document.getElementById('chat').innerHTML += `<div class="msg bot">Asante kwa kucheza! Support the dev on M-PESA 😄</div>`;
-    document.getElementById('input').value='';
-  }
-}
-
-loop();
-</script>
-</body>
-</html>
+    document.getElementById('chat').innerHTML += `<div class="msg">${msg
