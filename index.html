@@ -98,7 +98,13 @@ document.getElementById('up').ontouchend=()=>up=0;
 document.getElementById('down').ontouchstart=()=>down=1;
 document.getElementById('down').ontouchend=()=>down=0;
 document.getElementById('jump').onclick=()=>{if(game)vy=-10};
-document.getElementById('restart').onclick=()=>location.reload();
+function resetGame(){
+  game=1; s=0; px=100; py=c.height/2; vy=0;
+  poles=[{x:400,gapY:200},{x:400+poleDistance,gapY:250}];
+  document.getElementById('gameover').style.display='none';
+  document.getElementById('restart').style.display='none';
+}
+document.getElementById('restart').onclick=resetGame;
 
 // Chat
 function send(){
