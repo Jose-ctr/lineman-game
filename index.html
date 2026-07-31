@@ -1,133 +1,100 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Lineman Game ⚡</title>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
-    <style>
-        body { margin: 0; padding: 0; overflow: hidden; background: #87CEEB; }
-        canvas { display: block; }
-        #score { position: absolute; top: 10px; left: 10px; color: white; font-size: 24px; font-family: Arial; font-weight: bold; text-shadow: 2px 2px 4px black; z-index: 100; }
-        #donateBtn { position: absolute; top: 10px; right: 10px; background: red; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; z-index: 100; }
-        .controls { position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: center; gap: 30px; z-index: 100; }
-        .controls button { width: 70px; height: 70px; font-size: 30px; border-radius: 50%; border: 3px solid white; background: rgba(0,0,0,0.3); color: white; }
-        #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); color: white; padding: 30px; border-radius: 15px; display: none; text-align: center; z-index: 200; }
-    </style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Lineman Game ⚡</title>
+<style>
+body{margin:0;background:#87CEEB;overflow:hidden;font-family:Arial}
+#score{position:absolute;top:10px;left:10px;color:white;font-size:24px;font-weight:bold;text-shadow:2px 2px 4px #000}
+#donate{position:absolute;top:10px;right:10px;background:red;color:white;border:0;padding:10px;border-radius:8px;font-weight:bold}
+canvas{display:block}
+.controls{position:absolute;bottom:30px;width:100%;display:flex;justify-content:center;gap:30px}
+.controls button{width:70px;height:70px;font-size:30px;border-radius:50%;border:3px solid white;background:rgba(0,0,0,0.3);color:white}
+#over{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.9);color:white;padding:30px;border-radius:15px;display:none;text-align:center}
+</style>
 </head>
 <body>
-    <div id="score">SCORE: 0</div>
-    <button id="donateBtn" onclick="navigator.clipboard.writeText('0707649890'); alert('M-PESA: 0707649890 copied! ASANTE!')">⚡ SUPPORT DEVELOPER</button>
-    
-    <div class="controls">
-        <button id="btnUp">↑</button>
-        <button id="btnDown">↓</button>
-    </div>
-
-    <div id="gameOver">
-        <h2>⚡ GAME OVER ⚡</h2>
-        <p id="finalScore"></p>
-        <button onclick="location.reload()" style="padding:10px 20px; font-size:18px;">RESTART</button>
-    </div>
+<div id="score">SCORE: 0</div>
+<button id="donate" onclick="navigator.clipboard.writeText('0707649890');alert('M-PESA: 0707649890 copied! ASANTE!')">⚡ SUPPORT DEVELOPER</button>
+<canvas id="game"></canvas>
+<div class="controls">
+<button id="up">↑</button>
+<button id="down">↓</button>
+</div>
+<div id="over"><h2>⚡ GAME OVER ⚡</h2><p id="final"></p><button onclick="location.reload()">RESTART</button></div>
 
 <script>
-let player, score = 0, gameOver = false, poles, birds, wires;
-let upPressed = false, downPressed = false;
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight - 100;
 
-const config = {
-    type: Phaser.AUTO,
-    width: window.innerWidth,
-    height: window.innerHeight - 100,
-    backgroundColor: '#87CEEB',
-    physics: { default: 'arcade', arcade: { gravity: { y: 0 } },
-    scene: { create, update }
-};
+let playerY = 300, playerX = 100, score = 0, gameOver = false;
+let up = false, down = false;
+let poles = [], birds = [];
 
-const game = new Phaser.Game(config);
+// CREATE POLES
+for(let i=0;i<5;i++) poles.push({x:300+i*400,y:canvas.height-100});
+// CREATE BIRDS
+for(let i=0;i<3;i++) birds.push({x:500+i*500,y:200+i*50});
 
-function create() {
-    // 1. DRAW POLES
-    poles = this.add.group();
-    for(let i = 0; i < 5; i++) {
-        let x = 300 + i * 400;
-        let pole = this.add.rectangle(x, this.game.config.height - 100, 20, 200, 0x8B4513); // brown pole
-        let crossarm = this.add.rectangle(x, this.game.config.height - 200, 80, 10, 0x8B4513); // cross
-        poles.add(pole);
-        poles.add(crossarm);
-    }
+// BUTTONS
+document.getElementById('up').ontouchstart = () => up=true;
+document.getElementById('up').ontouchend = () => up=false;
+document.getElementById('down').ontouchstart = () => down=true;
+document.getElementById('down').ontouchend = () => down=false;
 
-    // 2. DRAW BIRDS
-    birds = this.add.group();
-    for(let i = 0; i < 3; i++) {
-        let bird = this.add.triangle(500 + i * 500, 200 + i * 50, 0, 20, 20, 10, 20, 30, 0x000); // black bird
-        bird.speed = 4;
-        birds.add(bird);
-    }
-
-    // 3. DRAW LINEMAN
-    player = this.add.container(100, 300);
-    let body = this.add.rectangle(0, 0, 20, 40, 0xFFD700); // yellow body
-    let head = this.add.circle(0, -30, 10, 0xFFD700); // yellow head
-    let helmet = this.add.circle(0, -30, 12, 0xFFFFFF); // white helmet
-    player.add([body, head, helmet]);
-    this.physics.add.existing(player);
-    player.body.setCollideWorldBounds(true);
-
-    // 4. DRAW WIRES
-    wires = this.add.graphics();
-
-    // BUTTONS
-    document.getElementById('btnUp').addEventListener('touchstart', () => upPressed = true);
-    document.getElementById('btnUp').addEventListener('touchend', () => upPressed = false);
-    document.getElementById('btnDown').addEventListener('touchstart', () => downPressed = true);
-    document.getElementById('btnDown').addEventListener('touchend', () => downPressed = false);
+function drawPole(x,y){
+    ctx.fillStyle = '#8B4513'; // brown
+    ctx.fillRect(x-10,y,20,200); // pole
+    ctx.fillRect(x-40,y-100,80,10); // crossarm
 }
 
-function update() {
+function drawBird(x,y){
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); // triangle bird
+    ctx.moveTo(x,y);
+    ctx.lineTo(x+20,y+10);
+    ctx.lineTo(x+20,y-10);
+    ctx.closePath();
+    ctx.fill();
+}
+
+function drawPlayer(x,y){
+    ctx.fillStyle = '#FFD700'; // yellow lineman
+    ctx.fillRect(x-10,y-20,20,40); // body
+    ctx.fillStyle = '#FFF'; // helmet
+    ctx.beginPath();
+    ctx.arc(x,y-30,12,0,Math.PI*2);
+    ctx.fill();
+}
+
+function gameLoop(){
     if(gameOver) return;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
 
     // MOVE PLAYER
-    if(upPressed) { player.y -= 4; score++; }
-    if(downPressed) { player.y += 4; }
-    document.getElementById('score').innerText = 'SCORE: ' + score;
-
+    if(up){playerY-=4;score++}
+    if(down){playerY+=4}
+    
     // DRAW WIRES
-    wires.clear();
-    wires.lineStyle(3, 0x000000);
-    poles.getChildren().forEach(pole => {
-        if(pole.width == 80) { // only crossarms
-            wires.lineBetween(player.x, player.y - 20, pole.x, pole.y);
-        }
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 3;
+    poles.forEach(p => {
+        ctx.beginPath();
+        ctx.moveTo(playerX,y=playerY-20);
+        ctx.lineTo(p.x,p.y-100);
+        ctx.stroke();
     });
 
-    // MOVE POLES
-    poles.getChildren().forEach(pole => {
-        pole.x -= 3;
-        if(pole.x < -100) pole.x = this.game.config.width + 100;
+    // DRAW POLES
+    poles.forEach(p => {
+        p.x -= 3;
+        if(p.x < -50) p.x = canvas.width + 50;
+        drawPole(p.x,p.y);
     });
 
-    // MOVE BIRDS
-    birds.getChildren().forEach(bird => {
-        bird.x -= bird.speed;
-        if(bird.x < -50) {
-            bird.x = this.game.config.width + 50;
-            bird.y = Phaser.Math.Between(100, 400);
-        }
-        // COLLISION
-        if(Phaser.Math.Distance.Between(player.x, player.y, bird.x, bird.y) < 30) {
-            gameOver = true;
-            document.getElementById('finalScore').innerText = 'HIT BY BIRD! Score: ' + score;
-            document.getElementById('gameOver').style.display = 'block';
-        }
-    });
-
-    // GAME OVER
-    if(player.y < 0 || player.y > this.game.config.height) {
-        gameOver = true;
-        document.getElementById('finalScore').innerText = 'FELL! Score: ' + score;
-        document.getElementById('gameOver').style.display = 'block';
-    }
-}
-</script>
-</body>
-</html>
+    // DRAW BIRDS
+    birds.forEach(b => {
+        b.x -= 4;
+        if(b.x < -50){b.x = canvas.width +
