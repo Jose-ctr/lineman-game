@@ -68,6 +68,14 @@ document.getElementById(id).ontouchstart=()=>keys[id]=true;
 document.getElementById(id).ontouchend=()=>keys[id]=false;
 });
 document.getElementById('reset').onclick=()=>location.reload();
+document.addEventListener('keydown', e => {
+  if(e.code === 'Space') drawing = true;
+  if(e.code === 'ShiftLeft') drawingP2 = true;
+});
+document.addEventListener('keyup', e => {
+  if(e.code === 'Space') drawing = false;
+  if(e.code === 'ShiftLeft') drawingP2 = false;
+});
 </script>
 </body>
 </html>
