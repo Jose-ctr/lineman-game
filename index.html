@@ -32,7 +32,7 @@ canvas{position:absolute;top:0;left:0}
 <body>
 <div id="gameArea">
 <div id="score">SCORE: 0</div>
-<div id="mpesa">M-PESA: 0707649890</div>  <!-- CHANGE THIS TO YOUR NUMBER -->
+<div id="mpesa">M-PESA: 0707649890</div> 
 <canvas id="c"></canvas>
 <div id="gameover">GAME OVER</div>
 <button id="restart">SUPPORT THE DEV - PAY 5BOB</button>
@@ -43,7 +43,7 @@ canvas{position:absolute;top:0;left:0}
 <div id="startScreen">
   <h2>SUPPORT THE DEVELOPER</h2>
   <p>Send any amount to:</p>
-  <div id="mpesaBig">M-PESA: 0707649890</div>  <!-- CHANGE THIS TOO -->
+  <div id="mpesaBig">M-PESA: 0707649890</div>
   <p>Then tap START</p>
   <button id="startBtn">START GAME</button>
   <div id="thankYou">THANK YOU FOR YOUR SUPPORT! 🙏</div>
@@ -71,7 +71,7 @@ let poles=[{x:400,gapY:200},{x:400+poleDistance,gapY:250}];
 
 // YOUR PHOTO - FROM FILE
 let linemanImg = new Image();
-linemanImg.src = "Lineman.png";  // CAPITAL L kama kwa GitHub
+linemanImg.src = "Lineman.png";
 
 function loop(){
   if(game){
@@ -106,7 +106,7 @@ function gameOver(){
   game=0;
   document.getElementById('gameover').style.display='block';
   document.getElementById('restart').style.display='block';
-  document.getElementById('startScreen').style.display='flex'; // Rudi kwa support screen
+  document.getElementById('startScreen').style.display='flex';
 }
 
 function resetGame(){
