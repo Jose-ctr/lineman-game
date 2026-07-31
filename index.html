@@ -78,8 +78,7 @@ poles.forEach(p=>{p.x-=3;if(p.x<-50)p.x=c.width+50;x.fillRect(p.x-10,p.y,20,200)
 
 // draw birds
 x.fillStyle='#000';
-birds.forEach(b=>{b.x-=4;if(b.x<-50){b.x=c.width+50;b.y=Math.random()*300+100} x.beginPath();x.moveTo(b.x,b.y);x.lineTo(b.x+20,b.y-10);x.lineTo(b.x+20,b.y+10);x.fill()});
-
+birds.forEach(b=>{b.x-=(speed+1);if(b.x<-50){b.x=c.width+
 // draw player
 
 // draw LINEMAN - BIGGER AND WITH OUTLINE
