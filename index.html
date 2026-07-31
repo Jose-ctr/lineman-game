@@ -1,34 +1,126 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Lineman 2P FIXED</title>
+<title>LINEMAN 2P WORKING</title>
 <style>
-body{background:#000;color:#0f0;text-align:center;margin:0;padding:10px;font-family:Arial;touch-action:none}
-h1{margin:5px}
-canvas{background:#000;border:3px solid #0f0;display:block;margin:10px auto;touch-action:none}
-button{padding:14px;border:none;border-radius:10px;font-weight:bold;font-size:16px;touch-action:none}
-.p1{background:#00ffff;color:#000;width:150px;height:65px}
-.p2{background:orange;color:#000;width:150px;height:65px}
-.controls{display:grid;grid-template-columns:repeat(3,70px);gap:5px;justify-content:center;margin:10px}
-.controls button{width:70px;height:70px;background:#333;color:#fff;font-size:28px}
-#reset{background:#555;color:#fff;width:100px}
+* {touch-action: none;}
+body {background: #000; color: #0f0; text-align: center; margin: 0; padding: 10px; font-family: Arial;}
+h1 {color: #0f0; margin: 5px;}
+canvas {background: #000; border: 3px solid #0f0; display: block; margin: 10px auto;}
+.btn {padding: 15px; border: none; border-radius: 10px; font-weight: bold; font-size: 18px; margin: 3px;}
+#p1 {background: cyan; color: black; width: 150px;}
+#p2 {background: orange; color: black; width: 150px;}
+.arrow {width: 70px; height: 70px; background: #333; color: white; font-size: 30px;}
+#reset {background: #555; color: white; width: 120px;}
+.controls {display: grid; grid-template-columns: 70px 70px 70px; gap: 5px; justify-content: center;}
 </style>
 </head>
 <body>
 <h1>LINEMAN 2P</h1>
-<canvas id="c" width="340" height="280"></canvas>
+<canvas id="game" width="340" height="280"></canvas>
 
 <div>
-<button class="p1" id="p1draw">P1 DRAW</button>
-<button class="p2" id="p2draw">P2 DRAW</button>
+<button class="btn" id="p1">P1 DRAW</button>
+<button class="btn" id="p2">P2 DRAW</button>
 </div>
 
 <div class="controls">
-<div></div><button id="up">↑</button><div></div>
-<button id="left">←</button><button id="down">↓</button><button id="right">→</button>
+<div></div><button class="arrow" id="up">↑</button><div></div>
+<button class="arrow" id="left">←</button><button class="arrow" id="down">↓</button><button class="arrow" id="right">→</button>
 </div>
-<button id="reset">RESET</button>
+<button class="btn" id="reset">RESET</button>
 
 <script>
-const c=document.getElementById('c'),ctx=c.getContext
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+// WACHEZAJI
+let player1 = {x: 80, y: 140, color: 'cyan', alive: true, line: [], drawing: false};
+let player2 = {x: 260, y: 140, color: 'orange', alive: true, line: [], drawing: false};
+let moveX = 0, moveY = 0, currentPlayer = 1;
+
+// KUCHORA SCREEN
+function draw() {
+  ctx.fillStyle = 'black';
+  ctx.fillRect(0, 0, 340, 280);
+  
+  [player1, player2].forEach(p => {
+    if (!p.alive) return;
+    // RAIA
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+    ctx.fill();
+    // LINE
+    ctx.strokeStyle = p.color;
+    ctx.lineWidth = 4;
+    p.line.forEach(seg => {
+      ctx.beginPath();
+      ctx.moveTo(seg[0].x, seg[0].y);
+      seg.forEach(pt => ctx.lineTo(pt.x, pt.y));
+      ctx.stroke();
+    });
+  });
+}
+
+// KUSONGA
+function update() {
+  let p = currentPlayer === 1? player1 : player2;
+  if (!p.alive) return;
+  
+  p.x += moveX;
+  p.y += moveY;
+  
+  // USITOKE NJE YA BOX
+  p.x = Math.max(8, Math.min(332, p.x));
+  p.y = Math.max(8, Math.min(272, p.y));
+  
+  // KAMA UNACHORA
+  if (p.drawing) {
+    if (p.line.length === 0) p.line.push([{x: p.x, y: p.y}]);
+    p.line[p.line.length - 1].push({x: p.x, y: p.y});
+  }
+  
+  // KUANGALIA KAMA UMEUA
+  [player1, player2].forEach(me => {
+    [player1, player2].forEach(other => {
+      if (me!== other) {
+        other.line.flat().forEach(pt => {
+          if (Math.abs(me.x - pt.x) < 8 && Math.abs(me.y - pt.y) < 8) {
+            me.alive = false;
+          }
+        });
+      }
+    });
+  });
+  
+  draw();
+}
+
+// LOOP YA GAME
+setInterval(update, 30);
+draw(); // Onyesha players mara moja
+
+// MISHALE
+document.getElementById('up').addEventListener('touchstart', e => {e.preventDefault(); moveX=0; moveY=-3;});
+document.getElementById('down').addEventListener('touchstart', e => {e.preventDefault(); moveX=0; moveY=3;});
+document.getElementById('left').addEventListener('touchstart', e => {e.preventDefault(); moveX=-3; moveY=0;});
+document.getElementById('right').addEventListener('touchstart', e => {e.preventDefault(); moveX=3; moveY=0;});
+document.getElementById('up').addEventListener('touchend', e => {e.preventDefault(); moveX=0; moveY=0;});
+document.getElementById('down').addEventListener('touchend', e => {e.preventDefault(); moveX=0; moveY=0;});
+document.getElementById('left').addEventListener('touchend', e => {e.preventDefault(); moveX=0; moveY=0;});
+document.getElementById('right').addEventListener('touchend', e => {e.preventDefault(); moveX=0; moveY=0;});
+
+// BUTTON ZA DRAW
+document.getElementById('p1').addEventListener('touchstart', e => {e.preventDefault(); currentPlayer=1; player1.drawing=true;});
+document.getElementById('p1').addEventListener('touchend', e => {e.preventDefault(); player1.drawing=false;});
+document.getElementById('p2').addEventListener('touchstart', e => {e.preventDefault(); currentPlayer=2; player2.drawing=true;});
+document.getElementById('p2').addEventListener('touchend', e => {e.preventDefault(); player2.drawing=false;});
+
+// RESET
+document.getElementById('reset').onclick = () => location.reload();
+</script>
+</body>
+</html>
