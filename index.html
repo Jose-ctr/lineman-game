@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="sw">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lineman Wachezaji 2 Mtandaoni</title>
+<title>Lineman 2 Player Online</title>
 <style>
     body { margin:0; background:#111; color:white; font-family:Arial; text-align:center; overflow:hidden; }
     canvas { background:#000; border:2px solid #444; display:block; margin:10px auto; max-width:95vw; }
@@ -24,24 +24,24 @@
 </script>
 </head>
 <body>
-<h1>⚡ LINEMAN WACHEZAJI 2 MTANDAONI ⚡</h1>
-<div id="status">Bonyeza "Tengeneza Chumba" au ingiza Nambari</div>
+<h1>⚡ LINEMAN 2 PLAYER ONLINE ⚡</h1>
+<div id="status">Click "Create Room" or enter Code</div>
 <div>
-    <button onclick="createRoom()">Tengeneza Chumba</button>
-    <input id="joinInput" placeholder="Weka Nambari ya Chumba">
-    <button onclick="joinRoom()">Ingia Chumbani</button>
+    <button onclick="createRoom()">Create Room</button>
+    <input id="joinInput" placeholder="Enter Room Code">
+    <button onclick="joinRoom()">Join Room</button>
 </div>
 <div id="roomCode"></div>
 <canvas id="gameCanvas" width="800" height="600"></canvas>
 <div id="ui">
-    WASD / Mishale = Sogeza | Space = Chora Mstari | K = Futa Mistari Yote
+    WASD / Arrow Keys = Move | Space = Draw Line | K = Clear Lines | R = Restart
 </div>
 
 <script type="module">
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, set, onValue, update } from "firebase/database";
 
-// CONFIG YAKO YA FIREBASE
+// YOUR FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyALO95KtE3U9y8nAxtiVEjvPAx-fQ09srA",
   authDomain: "lineman-game.firebaseapp.com",
@@ -72,8 +72,8 @@ function randomCode() {
 window.createRoom = () => {
     roomId = randomCode();
     playerId = 'p1';
-    document.getElementById('roomCode').innerText = 'Nambari ya Chumba: ' + roomId;
-    document.getElementById('status').innerText = 'Tunasubiri Mchezaji wa 2...';
+    document.getElementById('roomCode').innerText = 'Room Code: ' + roomId;
+    document.getElementById('status').innerText = 'Waiting for Player 2...';
     set(ref(db, 'rooms/' + roomId), {
         players: { p1: { x:100, y:300, color:'cyan', alive:true } },
         lines: []
@@ -84,9 +84,9 @@ window.createRoom = () => {
 window.joinRoom = () => {
     roomId = document.getElementById('joinInput').value.toUpperCase();
     playerId = 'p2';
-    document.getElementById('roomCode').innerText = 'Nambari ya Chumba: ' + roomId;
+    document.getElementById('roomCode').innerText = 'Room Code: ' + roomId;
     set(ref(db, 'rooms/' + roomId + '/players/p2'), { x:700, y:300, color:'orange', alive:true });
-    document.getElementById('status').innerText = 'Mchezo Umeanza!';
+    document.getElementById('status').innerText = 'Game Started!';
     listenRoom();
 }
 
@@ -124,13 +124,13 @@ function draw() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0,0,800,600);
     
-    // Chora mistari
+    // Draw lines
     gameState.lines.forEach(pt => { 
         ctx.fillStyle = pt.color; 
         ctx.fillRect(pt.x-2, pt.y-2, 4, 4); 
     });
     
-    // Chora wachezaji
+    // Draw players
     for(let id in gameState.players){
         let p = gameState.players[id];
         ctx.fillStyle = p.color;
