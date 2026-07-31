@@ -2,19 +2,25 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Lineman 2 Player Online</title>
 <style>
     body { margin:0; background:#111; color:white; font-family:Arial; text-align:center; overflow:hidden; touch-action: none; }
-    canvas { background:#000; border:2px solid #444; display:block; margin:10px auto; max-width:95vw; }
-    #ui { margin-top:10px; font-size:14px; }
-    button { padding:12px 24px; font-size:16px; margin:5px; background:#00aaff; border:none; color:white; border-radius:8px; cursor:pointer; font-weight:bold; }
+    canvas { background:#000; border:2px solid #444; display:block; margin:10px auto; max-width:95vw; max-height:50vh; }
+    #ui { margin-top:10px; font-size:12px; }
+    button { padding:12px 20px; font-size:16px; margin:5px; background:#00aaff; border:none; color:white; border-radius:8px; cursor:pointer; font-weight:bold; }
     button:hover { background:#0088cc; }
     #roomCode { font-size:22px; color:#0f0; font-weight:bold; margin:10px; }
     #status { margin:10px; font-size:18px; }
     input { padding:12px; border-radius:5px; border:none; font-size:16px; width:200px; }
-   .mobile-controls { display:none; }
-    @media (max-width: 800px) {.mobile-controls { display:block; }
+    
+    /* MOBILE CONTROLS */
+   .mobile-controls { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; max-width:400px; margin:10px auto; }
+   .dpad { display:grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap:5px; }
+   .btn { background:#333; border:2px solid #555; padding:15px; border-radius:10px; font-size:20px; user-select:none; }
+   .btn:active { background:#555; }
+    #drawBtn { background:#ff8800; grid-column: 3; grid-row: 2; }
+    #drawBtn.active { background:#ffaa00; }
 </style>
 <script type="importmap">
 {
@@ -37,7 +43,19 @@
 <div id="roomCode"></div>
 <canvas id="gameCanvas" width="800" height="600"></canvas>
 <div id="ui">
-    WASD / Arrow Keys = Move | Space = Draw Line | K = Clear Lines | R = Restart
+    PC: WASD/Arrows + SPACE | Mobile: Use buttons below
+</div>
+
+<!-- MOBILE BUTTONS -->
+<div class="mobile-controls">
+    <div></div>
+    <button class="btn" ontouchstart="pressKey('w')" ontouchend="releaseKey('w')">↑</button>
+    <div></div>
+    <button class="btn" ontouchstart="pressKey('a')" ontouchend="releaseKey('a')">←</button>
+    <button class="btn" ontouchstart="pressKey('s')" ontouchend="releaseKey('s')">↓</button>
+    <button class="btn" ontouchstart="pressKey('d')" ontouchend="releaseKey('d')">→</button>
+    <div></div>
+    <button class="btn" id="drawBtn" ontouchstart="pressKey(' ')" ontouchend="releaseKey(' ')">DRAW</button>
 </div>
 
 <script type="module">
@@ -66,11 +84,12 @@ let keys = {};
 let drawing = false;
 let lastPos = {};
 
-document.addEventListener('keydown', e => {
-    keys[e.key.toLowerCase()] = true;
-    if(e.key === 'r') restartGame();
-});
+document.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
 document.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+// FOR MOBILE BUTTONS
+window.pressKey = (k) => { keys[k] = true; if(k===' ') document.getElementById('drawBtn').classList.add('active'); }
+window.releaseKey = (k) => { keys[k] = false; if(k===' ') document.getElementById('drawBtn').classList.remove('active'); }
 
 function randomCode() {
     return Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -117,7 +136,8 @@ function listenRoom() {
 
 function checkCollision(x, y, color) {
     for(let pt of gameState.lines) {
-        if(Math.abs(pt.x - x) < 8 && Math.abs(pt.y - y) < 8 && pt.color!== color) {
+        let dist = Math.sqrt((pt.x2-x)*(pt.x2-x) + (pt.y2-y)*(pt.y2-y));
+        if(dist < 10 && pt.color!== color) {
             return true;
         }
     }
@@ -130,23 +150,21 @@ function updatePlayer() {
     if(!p.alive) return;
 
     let oldX = p.x, oldY = p.y;
-    if(keys['w'] || keys['arrowup']) p.y -= 4;
-    if(keys['s'] || keys['arrowdown']) p.y += 4;
-    if(keys['a'] || keys['arrowleft']) p.x -= 4;
-    if(keys['d'] || keys['arrowright']) p.x += 4;
+    if(keys['w']) p.y -= 4;
+    if(keys['s']) p.y += 4;
+    if(keys['a']) p.x -= 4;
+    if(keys['d']) p.x += 4;
     
     p.x = Math.max(10, Math.min(790, p.x));
     p.y = Math.max(10, Math.min(590, p.y));
 
-    // Draw line when moving with space held
+    // Draw line when DRAW is held
     if(keys[' ']) {
-        drawing = true;
         if(lastPos[playerId]) {
             gameState.lines.push({x1:lastPos[playerId].x, y1:lastPos[playerId].y, x2:p.x, y2:p.y, color:p.color});
         }
         lastPos[playerId] = {x:p.x, y:p.y};
     } else {
-        drawing = false;
         lastPos[playerId] = null;
     }
     
@@ -155,7 +173,7 @@ function updatePlayer() {
     // Check collision
     if(checkCollision(p.x, p.y, p.color)) {
         p.alive = false;
-        document.getElementById('status').innerText = playerId + ' DIED! Press R to Restart';
+        document.getElementById('status').innerText = playerId + ' DIED! Press Restart';
     }
 
     update(ref(db, 'rooms/' + roomId + '/players/' + playerId), p);
@@ -185,3 +203,8 @@ function draw() {
         ctx.arc(p.x, p.y, 10, 0, Math.PI*2);
         ctx.fill();
     }
+}
+setInterval(updatePlayer, 1000/60);
+</script>
+</body>
+</html>
