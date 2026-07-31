@@ -74,7 +74,7 @@ poles.forEach(p=>{x.beginPath();x.moveTo(px,py-20);x.lineTo(p.x,p.y-100);x.strok
 
 // draw poles
 x.fillStyle='#8B4513';
-poles.forEach(p=>{p.x-=3;if(p.x<-50)p.x=c.width+50;x.fillRect(p.x-10,p.y,20,200);x.fillRect(p.x-40,p.y-100,80,10)});
+poles.forEach(p=>{p.x-=speed;if(p.x<-50)p.x=c.width+50;...
 
 // draw birds
 x.fillStyle='#000';
