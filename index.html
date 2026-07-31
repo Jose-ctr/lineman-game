@@ -8,11 +8,11 @@
     <style>
         body { margin: 0; padding: 0; overflow: hidden; background: #87CEEB; }
         canvas { display: block; }
-        #score { position: absolute; top: 10px; left: 10px; color: white; font-size: 24px; font-family: Arial; z-index: 100; }
-        #donateBtn { position: absolute; top: 10px; right: 10px; background: red; color: white; border: none; padding: 8px 12px; border-radius: 5px; z-index: 100; }
-        .controls { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: center; gap: 20px; z-index: 100; }
-        .controls button { width: 60px; height: 60px; font-size: 24px; }
-        #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px; border-radius: 10px; display: none; text-align: center; z-index: 200; }
+        #score { position: absolute; top: 10px; left: 10px; color: white; font-size: 24px; font-family: Arial; font-weight: bold; text-shadow: 2px 2px 4px black; z-index: 100; }
+        #donateBtn { position: absolute; top: 10px; right: 10px; background: red; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; z-index: 100; }
+        .controls { position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: center; gap: 30px; z-index: 100; }
+        .controls button { width: 70px; height: 70px; font-size: 30px; border-radius: 50%; border: 3px solid white; background: rgba(0,0,0,0.3); color: white; }
+        #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); color: white; padding: 30px; border-radius: 15px; display: none; text-align: center; z-index: 200; }
     </style>
 </head>
 <body>
@@ -25,27 +25,20 @@
     </div>
 
     <div id="gameOver">
-        <h2>GAME OVER</h2>
+        <h2>⚡ GAME OVER ⚡</h2>
         <p id="finalScore"></p>
-        <button onclick="location.reload()">RESTART</button>
+        <button onclick="location.reload()" style="padding:10px 20px; font-size:18px;">RESTART</button>
     </div>
 
 <script>
-let player, score = 0, gameOver = false;
+let player, score = 0, gameOver = false, poles, birds;
 let upPressed = false, downPressed = false;
+let wireGraphics;
 
 function showDonateOptions() {
     const mpesaNumber = "0707649890";
     navigator.clipboard.writeText(mpesaNumber);
-    alert(`ASANTE SANA! 🙏\n\nM-PESA NUMBER: ${mpesaNumber}\n\nNumber copied! Open M-PESA > Send Money > Paste number to support.`);
-}
-
-function getRating(score) {
-    if(score >= 1000) return {text: "LEGENDARY! 👑⚡", color: "#ffd700"};
-    else if(score >= 500) return {text: "EXCELLENT! ⚡🔥", color: "#ff5500"};
-    else if(score >= 100) return {text: "GOOD! 💪", color: "#ffaa00"};
-    else if(score >= 20) return {text: "FAIR 🙂", color: "#00aaff"};
-    else return {text: "KEEP TRYING! 💯", color: "#ffffff"};
+    alert(`ASANTE SANA! 🙏\n\nM-PESA: ${mpesaNumber}\n\nNumber copied! Support the developer.`);
 }
 
 const config = {
@@ -53,15 +46,8 @@ const config = {
     width: window.innerWidth,
     height: window.innerHeight - 100,
     backgroundColor: '#87CEEB',
-    physics: {
-        default: 'arcade',
-        arcade: { gravity: { y: 0 }
-    },
-    scene: {
-        preload: preload,
-        create: create,
-        update: update
-    }
+    physics: { default: 'arcade', arcade: { gravity: { y: 0 } },
+    scene: { preload, create, update }
 };
 
 const game = new Phaser.Game(config);
@@ -69,45 +55,88 @@ const game = new Phaser.Game(config);
 function preload() {}
 
 function create() {
-    // PLAYER - YELLOW SQUARE - THIS WILL 100% SHOW
-    player = this.add.rectangle(100, 300, 40, 40, 0xffff00).setOrigin(0.5);
+    // WIRE GRAPHICS
+    wireGraphics = this.add.graphics();
+
+    // POLES GROUP
+    poles = this.physics.add.group();
+    for(let i = 0; i < 5; i++) {
+        let pole = poles.create(300 + i * 400, config.height - 100, null);
+        pole.setSize(20, 200).setVisible(false);
+    }
+
+    // BIRDS GROUP  
+    birds = this.physics.add.group();
+    for(let i = 0; i < 3; i++) {
+        let bird = birds.create(500 + i * 500, 200 + i * 50, null);
+        bird.setSize(30, 20).setVisible(false);
+        bird.setVelocityX(-100);
+    }
+
+    // LINEMAN - YELLOW RECTANGLE FOR NOW
+    player = this.add.rectangle(100, 300, 30, 50, 0xffff00).setOrigin(0.5);
     this.physics.add.existing(player);
     player.body.setCollideWorldBounds(true);
-    player.body.setImmovable(true);
 
-    // MOBILE BUTTONS
+    // COLLISIONS
+    this.physics.add.overlap(player, birds, hitBird, null, this);
+    this.physics.add.overlap(player, poles, hitPole, null, this);
+
+    // BUTTONS
     document.getElementById('btnUp').addEventListener('touchstart', () => upPressed = true);
     document.getElementById('btnUp').addEventListener('touchend', () => upPressed = false);
     document.getElementById('btnDown').addEventListener('touchstart', () => downPressed = true);
     document.getElementById('btnDown').addEventListener('touchend', () => downPressed = false);
-
-    // KEYBOARD
-    this.input.keyboard.on('keydown-UP', () => upPressed = true);
-    this.input.keyboard.on('keyup-UP', () => upPressed = false);
-    this.input.keyboard.on('keydown-DOWN', () => downPressed = true);
-    this.input.keyboard.on('keyup-DOWN', () => downPressed = false);
 }
 
 function update() {
     if(gameOver) return;
 
-    if(upPressed) {
-        player.y -= 5;
-        score += 1;
-    }
-    if(downPressed) {
-        player.y += 5;
-    }
+    // DRAW WIRE
+    wireGraphics.clear();
+    wireGraphics.lineStyle(4, 0x000000);
+    poles.getChildren().forEach(pole => {
+        wireGraphics.lineBetween(100, player.y, pole.x, pole.y - 100);
+    });
 
+    // MOVE PLAYER
+    if(upPressed) { player.y -= 4; score++; }
+    if(downPressed) { player.y += 4; }
     document.getElementById('score').innerText = 'SCORE: ' + score;
+
+    // MOVE POLES
+    poles.getChildren().forEach(pole => {
+        pole.x -= 3;
+        if(pole.x < -50) pole.x = config.width + 50;
+    });
+
+    // MOVE BIRDS
+    birds.getChildren().forEach(bird => {
+        bird.x -= 4;
+        if(bird.x < -50) {
+            bird.x = config.width + 50;
+            bird.y = Phaser.Math.Between(100, 400);
+        }
+    });
 
     // GAME OVER
     if(player.y < 0 || player.y > config.height) {
         gameOver = true;
-        let rating = getRating(score);
-        document.getElementById('finalScore').innerText = 'Score: ' + score + ' - ' + rating.text;
+        document.getElementById('finalScore').innerText = 'Final Score: ' + score;
         document.getElementById('gameOver').style.display = 'block';
     }
+}
+
+function hitBird(player, bird) {
+    gameOver = true;
+    document.getElementById('finalScore').innerText = 'HIT BY BIRD! Score: ' + score;
+    document.getElementById('gameOver').style.display = 'block';
+}
+
+function hitPole(player, pole) {
+    gameOver = true;
+    document.getElementById('finalScore').innerText = 'HIT POLE! Score: ' + score;
+    document.getElementById('gameOver').style.display = 'block';
 }
 </script>
 </body>
