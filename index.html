@@ -2,25 +2,19 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lineman ONLINE</title>
+<title>Lineman OFFLINE</title>
 <style>
 body{background:#000;color:#0f0;text-align:center;margin:0;padding:10px;font-family:Arial}
 h1{margin:5px}
-input{padding:10px;font-size:16px;width:120px;text-align:center}
-button{padding:10px 15px;margin:3px;font-size:16px;border:none;border-radius:6px;font-weight:bold}
-#create{background:#00aaff;color:#fff}
-#join{background:#00ddaa;color:#000}
-canvas{background:#000;border:2px solid #0f0;display:block;margin:10px auto}
-#draw{background:orange;color:#000;width:160px;height:60px;font-size:20px}
-.controls button{width:60px;height:60px;background:#222;color:#fff;font-size:24px}
+canvas{background:#000;border:2px solid #0f0;display:block;margin:10px auto;touch-action:none}
+button{padding:14px 18px;margin:4px;font-size:18px;border:none;border-radius:8px;font-weight:bold;touch-action:none}
+#draw{background:orange;color:#000;width:170px;height:65px;font-size:22px}
+.controls button{width:65px;height:65px;background:#222;color:#fff;font-size:26px}
 </style>
 </head>
 <body>
-<h1>LINEMAN ONLINE</h1>
-<button id="create">Create Room</button>
-<input id="roomInput" placeholder="Room Code">
-<button id="join">Join Room</button>
-<div>Room Code: <span id="roomCode">-</span></div>
+<h1>LINEMAN OFFLINE</h1>
+<div>P1: W A S D + SPACE | P2: Arrows + SHIFT</div>
 <canvas id="c" width="340" height="280"></canvas>
 
 <div class="controls">
@@ -30,78 +24,55 @@ canvas{background:#000;border:2px solid #0f0;display:block;margin:10px auto}
 <button id="right">→</button>
 </div>
 <button id="draw">DRAW</button>
+<button id="reset">RESET</button>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-// TUMIA HII FIREBASE YA BURE
-const firebaseConfig = {
-  apiKey: "AIzaSyA1b2c3d4e5f6g7h8i9j0",
-  authDomain: "lineman-demo.firebaseapp.com",
-  databaseURL: "https://lineman-demo-default-rtdb.firebaseio.com",
-  projectId: "lineman-demo",
-};
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
+<script>
 const c=document.getElementById('c'),ctx=c.getContext('2d');
-let roomId=null,player=null;
-let game={p1:{x:90,y:140,col:'cyan',alive:true,line:[],d:false},p2:{x:250,y:140,col:'orange',alive:true,line:[],d:false}};
+let p1={x:90,y:140,col:'cyan',alive:true,line:[],drawing:false};
+let p2={x:250,y:140,col:'orange',alive:true,line:[],drawing:false};
 let keys={};
 
-document.getElementById('create').onclick=()=>{
-  roomId=Math.random().toString(36).substr(2,4).toUpperCase();
-  player='p1';
-  set(ref(db,'rooms/'+roomId),game);
-  document.getElementById('roomCode').innerText=roomId;
-  alert('Room Created! Code: '+roomId+'\nMpe rafiki yako aingie');
-  listen();
-};
-
-document.getElementById('join').onclick=()=>{
-  roomId=document.getElementById('roomInput').value.toUpperCase();
-  player='p2';
-  document.getElementById('roomCode').innerText=roomId;
-  listen();
-};
-
-function listen(){
-  onValue(ref(db,'rooms/'+roomId),(snap)=>{
-    if(snap.exists()){game=snap.val();draw();}
-  });
-}
-
-function draw(){
-  ctx.fillStyle='#000';ctx.fillRect(0,0,340,280);
-  ['p1','p2'].forEach(p=>{
-    if(!game[p].alive)return;
-    ctx.fillStyle=game[p].col;ctx.beginPath();ctx.arc(game[p].x,game[p].y,7,0,6.28);ctx.fill();
-    ctx.strokeStyle=game[p].col;ctx.lineWidth=3;
-    game[p].line.forEach(seg=>{ctx.beginPath();ctx.moveTo(seg[0].x,seg[0].y);seg.forEach(pt=>ctx.lineTo(pt.x,pt.y));ctx.stroke();})
-  });
-}
-
-function move(dx,dy){
-  if(!player)return;
-  game[player].x+=dx;game[player].y+=dy;
-  if(game[player].d){if(game[player].line.length==0)game[player].line.push([{x:game[player].x,y:game[player].y}]);game[player].line[game[player].line.length-1].push({x:game[player].x,y:game[player].y});}
-  set(ref(db,'rooms/'+roomId),game);
-}
-
-setInterval(()=>{
-  if(keys['w'])move(0,-2.5);if(keys['s'])move(0,2.5);if(keys['a'])move(-2.5,0);if(keys['d'])move(2.5,0);
-  if(keys['ArrowUp'])move(0,-2.5);if(keys['ArrowDown'])move(0,2.5);if(keys['ArrowLeft'])move(-2.5,0);if(keys['ArrowRight'])move(2.5,0);
-},40);
-
-window.addEventListener('keydown',e=>{keys[e.key]=true;if(e.key==' ')game[player].d=true;});
-window.addEventListener('keyup',e=>{keys[e.key]=false;if(e.key==' ')game[player].d=false;});
-document.getElementById('draw').ontouchstart=()=>{if(player)game[player].d=true};
-document.getElementById('draw').ontouchend=()=>{if(player)game[player].d=false};
-['up','down','left','right'].forEach(id=>{
-document.getElementById(id).ontouchstart=()=>keys[id]=true;
-document.getElementById(id).ontouchend=()=>keys[id]=false;
+function drawGame(){
+ctx.fillStyle='#000';ctx.fillRect(0,0,340,280);
+[p1,p2].forEach(p=>{
+if(!p.alive)return;
+ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(p.x,p.y,7,0,6.28);ctx.fill();
+ctx.strokeStyle=p.col;ctx.lineWidth=3;
+p.line.forEach(seg=>{ctx.beginPath();ctx.moveTo(seg[0].x,seg[0].y);seg.forEach(pt=>ctx.lineTo(pt.x,pt.y));ctx.stroke();})
 });
+}
+function move(p,dx,dy){
+if(!p.alive)return;
+p.x+=dx;p.y+=dy;
+p.x=Math.max(0,Math.min(340,p.x));p.y=Math.max(0,Math.min(280,p.y));
+if(p.drawing){
+if(p.line.length==0)p.line.push([{x:p.x,y:p.y}]);
+p.line[p.line.length-1].push({x:p.x,y:p.y});
+}
+}
+function check(){
+[p1,p2].forEach(me=>[p1,p2].forEach(other=>{
+if(me!=other)other.line.flat().forEach(pt=>{if(Math.abs(me.x-pt.x)<6&&Math.abs(me.y-pt.y)<6)me.alive=false;})
+}))}
+setInterval(()=>{
+if(keys['w'])move(p1,0,-2.5);if(keys['s'])move(p1,0,2.5);if(keys['a'])move(p1,-2.5,0);if(keys['d'])move(p1,2.5,0);
+if(keys['ArrowUp'])move(p2,0,-2.5);if(keys['ArrowDown'])move(p2,0,2.5);if(keys['ArrowLeft'])move(p2,-2.5,0);if(keys['ArrowRight'])move(p2,2.5,0);
+check();drawGame();
+},33);
+
+window.addEventListener('keydown',e=>{keys[e.key]=true;if(e.key==' ')p1.drawing=true;if(e.key=='Shift')p2.drawing=true;});
+window.addEventListener('keyup',e=>{keys[e.key]=false;if(e.key==' ')p1.drawing=false;if(e.key=='Shift')p2.drawing=false;});
+
+// TOUCH ZA SIMU
+let p1Touch=false, p2Touch=false;
+document.getElementById('draw').addEventListener('touchstart',e=>{e.preventDefault();p1Touch=true;p1.drawing=true});
+document.getElementById('draw').addEventListener('touchend',e=>{e.preventDefault();p1Touch=false;p1.drawing=false});
+['up','down','left','right'].forEach(id=>{
+document.getElementById(id).addEventListener('touchstart',e=>{e.preventDefault();keys[id]=true;p2Touch=true});
+document.getElementById(id).addEventListener('touchend',e=>{e.preventDefault();keys[id]=false;p2Touch=false});
+});
+document.getElementById('reset').onclick=()=>location.reload();
+drawGame();
 </script>
 </body>
 </html>
