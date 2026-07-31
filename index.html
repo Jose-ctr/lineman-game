@@ -61,10 +61,10 @@ document.getElementById('up').ontouchend=()=>up=0;
 document.getElementById('down').ontouchstart=()=>down=1;
 document.getElementById('down').ontouchend=()=>down=0;
 
-  let speed = 3 + Math.floor(s/1000); // +1 speed every 1000 points
+  let speed = 3 + Math.floor(s/1000);
 function loop(){
 x.clearRect(0,0,c.width,c.height);
-if(up){py-=5; s = s + 0.1} // slower counting
+if(up){py-=5; s = s + 0.1}
 if(down){py+=5}
 document.getElementById('score').innerText='SCORE: '+Math.floor(s);
 document.getElementById('score').innerText='SCORE: '+Math.floor(s)+' SPEED: '+speed;
