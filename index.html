@@ -1,127 +1,73 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Lineman 2 Player Online</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lineman Mobile</title>
 <style>
-body { background:#0a0a0a; color:white; font-family:Arial; text-align:center; margin:0; }
-h1 { color:#00ff88; text-shadow:0 0 10px #00ff88; }
-#canvas { background:#111; border:2px solid #00ff88; display:block; margin:10px auto; }
-button { padding:12px 20px; margin:5px; font-size:16px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; }
-#create { background:#00aaff; color:white; }
-#join { background:#00ddaa; color:white; }
-#restart { background:#ff0044; color:white; }
-#drawBtn { background:orange; color:black; font-size:20px; padding:15px 30px; display:none; }
-.controls button { width:60px; height:60px; background:#333; color:white; font-size:24px; }
-#status { color:#00ff88; font-size:18px; margin:10px; }
+body{background:#000;color:#fff;text-align:center;margin:0;padding:10px;font-family:Arial}
+h1{color:#0f0;font-size:20px;margin:5px}
+canvas{background:#111;border:2px solid #0f0;display:block;margin:5px auto; width:95%; height:300px}
+button{padding:12px 18px;margin:3px;font-size:16px;border:none;border-radius:8px;font-weight:bold}
+#draw{background:orange;color:#000;width:160px;height:60px;font-size:22px}
+.controls button{width:60px;height:60px;background:#333;color:#fff;font-size:24px}
+#status{color:#0f0;margin:5px}
 </style>
 </head>
 <body>
-<h1>⚡ LINEMAN 2 PLAYER ONLINE ⚡</h1>
-<div id="status">Connect to internet</div>
-<button id="create">Create Room</button>
-<input id="roomInput" placeholder="Enter Room Code">
-<button id="join">Join Room</button>
-<button id="restart">Restart</button>
-<div>Room Code: <span id="roomCode">-</span></div>
-<canvas id="canvas" width="600" height="400"></canvas>
+<h1>LINEMAN</h1>
+<div id="status">Room: LOCAL - 2 Players</div>
+<canvas id="c"></canvas>
+
 <div class="controls">
-  <button id="up">↑</button><br>
-  <button id="left">←</button>
-  <button id="down">↓</button>
-  <button id="right">→</button>
+<button id="up">↑</button><br>
+<button id="left">←</button>
+<button id="down">↓</button>
+<button id="right">→</button>
 </div>
-<button id="drawBtn">DRAW</button>
+<button id="draw">DRAW</button>
+<button id="reset">RESET</button>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyB-EXAMPLE-KEY",
-  authDomain: "lineman-game.firebaseapp.com",
-  databaseURL: "https://lineman-game-default-rtdb.firebaseio.com",
-  projectId: "lineman-game",
-};
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-let roomId = null;
-let player = null;
-let gameState = { p1:{x:100,y:200,color:'cyan',alive:true,lines:[]}, p2:{x:500,y:200,color:'orange',alive:true,lines:[]} };
-let keys = {};
-let drawing = false;
-
-document.getElementById('create').onclick = () => {
-  roomId = Math.random().toString(36).substr(2,4).toUpperCase();
-  player = 'p1';
-  set(ref(db, 'rooms/' + roomId), gameState);
-  document.getElementById('roomCode').innerText = roomId;
-  document.getElementById('status').innerText = 'Room Created! Waiting for Player 2...';
-  listen();
-};
-
-document.getElementById('join').onclick = () => {
-  roomId = document.getElementById('roomInput').value.toUpperCase();
-  player = 'p2';
-  document.getElementById('roomCode').innerText = roomId;
-  document.getElementById('status').innerText = 'Game Started! Hold DRAW + Move';
-  document.getElementById('drawBtn').style.display = 'inline-block';
-  listen();
-};
-
-function listen(){
-  onValue(ref(db, 'rooms/' + roomId), (snap) => {
-    if(snap.exists()){
-      gameState = snap.val();
-      draw();
-      if(gameState.p1 && gameState.p2) document.getElementById('status').innerText = 'Game Started! Hold DRAW + Move';
-    }
-  });
-}
+<script>
+const c=document.getElementById('c');
+c.width=350; c.height=300; // ndogo kwa simu
+const ctx=c.getContext('2d');
+let p1={x:80,y:150,col:'cyan',alive:true,line:[],drawing:false};
+let p2={x:270,y:150,col:'orange',alive:true,line:[],drawing:false};
+let keys={};
 
 function draw(){
-  ctx.fillStyle = '#111'; ctx.fillRect(0,0,600,400);
-  ['p1','p2'].forEach(p => {
-    if(!gameState[p] ||!gameState[p].alive) return;
-    ctx.fillStyle = gameState[p].color;
-    ctx.beginPath(); ctx.arc(gameState[p].x, gameState[p].y, 8, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = gameState[p].color; ctx.lineWidth = 3;
-    gameState[p].lines.forEach(line => {
-      ctx.beginPath(); ctx.moveTo(line[0].x, line[0].y);
-      line.forEach(pt => ctx.lineTo(pt.x, pt.y)); ctx.stroke();
-    });
-  });
-}
-
-function move(dx,dy){
-  if(!player ||!gameState[player] ||!gameState[player].alive) return;
-  gameState[player].x += dx; gameState[player].y += dy;
-  if(drawing){
-    if(gameState[player].lines.length === 0) gameState[player].lines.push([{x:gameState[player].x,y:gameState[player].y}]);
-    gameState[player].lines[gameState[player].lines.length-1].push({x:gameState[player].x,y:gameState[player].y});
-  }
-  set(ref(db, 'rooms/' + roomId), gameState);
-}
-
-document.addEventListener('keydown', e => { keys[e.key] = true; if(e.key === ' ') drawing = true; });
-document.addEventListener('keyup', e => { keys[e.key] = false; if(e.key === ' ') drawing = false; });
-
-setInterval(() => {
-  if(keys['ArrowUp'] || keys['w']) move(0,-3);
-  if(keys['ArrowDown'] || keys['s']) move(0,3);
-  if(keys['ArrowLeft'] || keys['a']) move(-3,0);
-  if(keys['ArrowRight'] || keys['d']) move(3,0);
-}, 50);
-
-['up','down','left','right'].forEach(id => {
-  document.getElementById(id).onmousedown = () => keys[id] = true;
-  document.getElementById(id).onmouseup = () => keys[id] = false;
+ctx.fillStyle='#111';ctx.fillRect(0,0,350,300);
+[p1,p2].forEach(p=>{
+if(!p.alive)return;
+ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(p.x,p.y,6,0,6.28);ctx.fill();
+ctx.strokeStyle=p.col;ctx.lineWidth=2;
+p.line.forEach(seg=>{ctx.beginPath();ctx.moveTo(seg[0].x,seg[0].y);seg.forEach(pt=>ctx.lineTo(pt.x,pt.y));ctx.stroke();})
 });
-document.getElementById('drawBtn').onmousedown = () => drawing = true;
-document.getElementById('drawBtn').onmouseup = () => drawing = false;
+}
+function move(p,dx,dy){
+if(!p.alive)return;
+p.x+=dx;p.y+=dy;
+if(p.x<0)p.x=0;if(p.x>350)p.x=350;if(p.y<0)p.y=0;if(p.y>300)p.y=300;
+if(p.drawing){if(p.line.length==0)p.line.push([{x:p.x,y:p.y}]);p.line[p.line.length-1].push({x:p.x,y:p.y});}
+}
+function check(){
+[p1,p2].forEach(me=>[p1,p2].forEach(other=>{if(me!=other)other.line.flat().forEach(pt=>{if(Math.abs(me.x-pt.x)<5&&Math.abs(me.y-pt.y)<5)me.alive=false;}))})}
+setInterval(()=>{
+if(keys['w'])move(p1,0,-2);if(keys['s'])move(p1,0,2);if(keys['a'])move(p1,-2,0);if(keys['d'])move(p1,2,0);
+if(keys['ArrowUp'])move(p2,0,-2);if(keys['ArrowDown'])move(p2,0,2);if(keys['ArrowLeft'])move(p2,-2,0);if(keys['ArrowRight'])move(p2,2,0);
+check();draw();
+},40);
+
+document.addEventListener('keydown',e=>{keys[e.key]=true;if(e.key==' ')p1.drawing=true;});
+document.addEventListener('keyup',e=>{keys[e.key]=false;if(e.key==' ')p1.drawing=false;});
+
+document.getElementById('draw').ontouchstart=()=>p1.drawing=true;
+document.getElementById('draw').ontouchend=()=>p1.drawing=false;
+['up','down','left','right'].forEach(id=>{
+document.getElementById(id).ontouchstart=()=>keys[id]=true;
+document.getElementById(id).ontouchend=()=>keys[id]=false;
+});
+document.getElementById('reset').onclick=()=>location.reload();
 </script>
 </body>
 </html>
