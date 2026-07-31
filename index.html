@@ -25,8 +25,9 @@ button{position:absolute;bottom:20px;width:80px;height:80px;border-radius:50%;fo
 let c=document.getElementById('c'),x=c.getContext('2d');
 c.width=innerWidth;c.height=innerHeight;
 let px=100,py=c.height/2,s=0,up=0,down=0,gameOver=false;
-let poles=[{x:300},{x:600},{x:900}];
-let birds=[{x:400,y:200},{x:700,y:400},{x:1000,y:300}];
+let gap=180; // size of gap between poles
+let poles=[{x:300,gapY:200},{x:600,gapY:350},{x:900,gapY:250}];
+let birds=[{x:450,y:150},{x:750,y:500},{x:1050,y:300}];
 
 document.getElementById('up').ontouchstart=()=>up=1;
 document.getElementById('up').ontouchend=()=>up=0;
@@ -36,15 +37,11 @@ document.getElementById('restart').onclick=reset;
 
 function reset(){
   s=0; py=c.height/2; gameOver=false;
-  poles=[{x:300},{x:600},{x:900}];
-  birds=[{x:400,y:200},{x:700,y:400},{x:1000,y:300}];
+  poles=[{x:300,gapY:200},{x:600,gapY:350},{x:900,gapY:250}];
+  birds=[{x:450,y:150},{x:750,y:500},{x:1050,y:300}];
   document.getElementById('gameover').style.display='none';
   document.getElementById('restart').style.display='none';
   loop();
-}
-
-function checkCollision(objX,objY,w,h){
-  return px < objX + w && px + 20 > objX && py < objY + h && py + 30 > objY;
 }
 
 function loop(){
@@ -59,23 +56,33 @@ function loop(){
   
   document.getElementById('score').innerText='SCORE: '+Math.floor(s)+' SPEED: '+speed;
 
-  // draw poles + check collision
+  // draw poles WITH GAPS
   x.fillStyle='#8B4513';
   poles.forEach(p=>{
     p.x-=speed;
-    if(p.x<-50)p.x=c.width+50;
-    x.fillRect(p.x,50,10,c.height-50);
-    if(checkCollision(p.x,50,10,c.height-50)) gameOver=true;
+    if(p.x<-50){
+      p.x=c.width+50;
+      p.gapY=Math.random()*(c.height-gap-100)+50; // random gap position
+    }
+    // top part of pole
+    x.fillRect(p.x,0,10,p.gapY);
+    // bottom part of pole
+    x.fillRect(p.x,p.gapY+gap,10,c.height);
+    
+    // COLLISION - only if in pole x and NOT in gap
+    if(px+20 > p.x && px < p.x+10){
+      if(py < p.gapY || py+30 > p.gapY+gap) gameOver=true;
+    }
   });
 
-  // draw birds + check collision
+  // draw birds
   x.fillStyle='#000';
   birds.forEach(b=>{
     b.x-=(speed+1);
     if(b.x<-50){b.x=c.width+Math.random()*200;b.y=Math.random()*(c.height-200)+100}
     x.beginPath();x.arc(b.x,b.y,8,0,Math.PI*2);x.fill();
     let dx=px+10-b.x, dy=py+15-b.y;
-    if(Math.sqrt(dx*dx+dy*dy) < 18) gameOver=true; // bird collision
+    if(Math.sqrt(dx*dx+dy*dy) < 18) gameOver=true;
   });
 
   // draw LINEMAN
