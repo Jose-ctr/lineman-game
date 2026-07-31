@@ -67,7 +67,7 @@ x.clearRect(0,0,c.width,c.height);
 if(up){py-=5; s = s + 0.1} // slower counting
 if(down){py+=5}
 document.getElementById('score').innerText='SCORE: '+Math.floor(s);
-
+document.getElementById('score').innerText='SCORE: '+Math.floor(s)+' SPEED: '+speed;
 // draw wires
 x.strokeStyle='#000';x.lineWidth=3;
 poles.forEach(p=>{x.beginPath();x.moveTo(px,py-20);x.lineTo(p.x,p.y-100);x.stroke()});
