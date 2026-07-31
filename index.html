@@ -49,8 +49,20 @@ x.fillStyle='#000';
 birds.forEach(b=>{b.x-=4;if(b.x<-50){b.x=c.width+50;b.y=Math.random()*300+100} x.beginPath();x.moveTo(b.x,b.y);x.lineTo(b.x+20,b.y-10);x.lineTo(b.x+20,b.y+10);x.fill()});
 
 // draw player
-x.fillStyle='#FFD700';x.fillRect(px-10,py-20,20,40);x.fillStyle='#FFF';x.beginPath();x.arc(px,py-30,12,0,6.28);x.fill();
 
+// draw LINEMAN - BIGGER AND WITH OUTLINE
+x.fillStyle='#000'; // black outline
+x.fillRect(px-18,py-28,36,56); // outline body
+x.fillStyle='#FFD700'; // yellow body
+x.fillRect(px-15,py-25,30,50); // body
+x.fillStyle='#000'; // outline head
+x.beginPath();x.arc(px,py-35,18,0,6.28);x.fill();
+x.fillStyle='#FFD700'; // yellow head
+x.beginPath();x.arc(px,py-35,15,0,6.28);x.fill();
+x.fillStyle='#FFF'; // white helmet
+x.beginPath();x.arc(px,py-35,17,0,6.28);x.fill();
+x.fillStyle='#FF0000'; // red stripe on helmet
+x.fillRect(px-17,py-40,34,4);
 document.getElementById('score').innerText='SCORE: '+s;
 requestAnimationFrame(loop);
 }
