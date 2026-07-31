@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lineman 2 Player Online</title>
 <style>
-    body { margin:0; background:#111; color:white; font-family:Arial; text-align:center; overflow:hidden; }
+    body { margin:0; background:#111; color:white; font-family:Arial; text-align:center; overflow:hidden; touch-action: none; }
     canvas { background:#000; border:2px solid #444; display:block; margin:10px auto; max-width:95vw; }
     #ui { margin-top:10px; font-size:14px; }
     button { padding:12px 24px; font-size:16px; margin:5px; background:#00aaff; border:none; color:white; border-radius:8px; cursor:pointer; font-weight:bold; }
@@ -13,6 +13,8 @@
     #roomCode { font-size:22px; color:#0f0; font-weight:bold; margin:10px; }
     #status { margin:10px; font-size:18px; }
     input { padding:12px; border-radius:5px; border:none; font-size:16px; width:200px; }
+   .mobile-controls { display:none; }
+    @media (max-width: 800px) {.mobile-controls { display:block; }
 </style>
 <script type="importmap">
 {
@@ -30,6 +32,7 @@
     <button onclick="createRoom()">Create Room</button>
     <input id="joinInput" placeholder="Enter Room Code">
     <button onclick="joinRoom()">Join Room</button>
+    <button onclick="restartGame()" style="background:#ff4444;">Restart</button>
 </div>
 <div id="roomCode"></div>
 <canvas id="gameCanvas" width="800" height="600"></canvas>
@@ -41,7 +44,6 @@
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, set, onValue, update } from "firebase/database";
 
-// YOUR FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyALO95KtE3U9y8nAxtiVEjvPAx-fQ09srA",
   authDomain: "lineman-game.firebaseapp.com",
@@ -61,8 +63,13 @@ let roomId = null;
 let playerId = null;
 let gameState = { players:{}, lines:[] };
 let keys = {};
+let drawing = false;
+let lastPos = {};
 
-document.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+document.addEventListener('keydown', e => {
+    keys[e.key.toLowerCase()] = true;
+    if(e.key === 'r') restartGame();
+});
 document.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
 function randomCode() {
@@ -90,6 +97,17 @@ window.joinRoom = () => {
     listenRoom();
 }
 
+window.restartGame = () => {
+    if(!roomId) return;
+    set(ref(db, 'rooms/' + roomId), {
+        players: { 
+            p1: { x:100, y:300, color:'cyan', alive:true },
+            p2: { x:700, y:300, color:'orange', alive:true }
+        },
+        lines: []
+    });
+}
+
 function listenRoom() {
     onValue(ref(db, 'rooms/' + roomId), (snapshot) => {
         gameState = snapshot.val();
@@ -97,24 +115,48 @@ function listenRoom() {
     });
 }
 
+function checkCollision(x, y, color) {
+    for(let pt of gameState.lines) {
+        if(Math.abs(pt.x - x) < 8 && Math.abs(pt.y - y) < 8 && pt.color!== color) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function updatePlayer() {
     if(!roomId ||!playerId ||!gameState.players ||!gameState.players[playerId]) return;
     let p = gameState.players[playerId];
     if(!p.alive) return;
 
+    let oldX = p.x, oldY = p.y;
     if(keys['w'] || keys['arrowup']) p.y -= 4;
     if(keys['s'] || keys['arrowdown']) p.y += 4;
     if(keys['a'] || keys['arrowleft']) p.x -= 4;
     if(keys['d'] || keys['arrowright']) p.x += 4;
     
-    p.x = Math.max(0, Math.min(800, p.x));
-    p.y = Math.max(0, Math.min(600, p.y));
+    p.x = Math.max(10, Math.min(790, p.x));
+    p.y = Math.max(10, Math.min(590, p.y));
 
+    // Draw line when moving with space held
     if(keys[' ']) {
-        gameState.lines.push({x:p.x, y:p.y, color:p.color});
+        drawing = true;
+        if(lastPos[playerId]) {
+            gameState.lines.push({x1:lastPos[playerId].x, y1:lastPos[playerId].y, x2:p.x, y2:p.y, color:p.color});
+        }
+        lastPos[playerId] = {x:p.x, y:p.y};
+    } else {
+        drawing = false;
+        lastPos[playerId] = null;
     }
     
     if(keys['k']) { gameState.lines = []; }
+
+    // Check collision
+    if(checkCollision(p.x, p.y, p.color)) {
+        p.alive = false;
+        document.getElementById('status').innerText = playerId + ' DIED! Press R to Restart';
+    }
 
     update(ref(db, 'rooms/' + roomId + '/players/' + playerId), p);
     update(ref(db, 'rooms/' + roomId + '/lines'), gameState.lines);
@@ -125,21 +167,21 @@ function draw() {
     ctx.fillRect(0,0,800,600);
     
     // Draw lines
+    ctx.lineWidth = 4;
     gameState.lines.forEach(pt => { 
-        ctx.fillStyle = pt.color; 
-        ctx.fillRect(pt.x-2, pt.y-2, 4, 4); 
+        ctx.strokeStyle = pt.color; 
+        ctx.beginPath();
+        ctx.moveTo(pt.x1, pt.y1);
+        ctx.lineTo(pt.x2, pt.y2);
+        ctx.stroke();
     });
     
     // Draw players
     for(let id in gameState.players){
         let p = gameState.players[id];
+        if(!p.alive) continue;
         ctx.fillStyle = p.color;
         ctx.beginPath();
         ctx.arc(p.x, p.y, 10, 0, Math.PI*2);
         ctx.fill();
     }
-}
-setInterval(updatePlayer, 1000/60);
-</script>
-</body>
-</html>
