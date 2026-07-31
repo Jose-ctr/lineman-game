@@ -97,5 +97,10 @@ requestAnimationFrame(loop);
 }
 loop();
 </script>
+  <div id="over" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.85);color:white;padding:30px;border-radius:15px;display:none;text-align:center;z-index:999">
+    <h2>⚡ GAME OVER ⚡</h2>
+    <p id="finalScore" style="font-size:24px">Score: 0</p>
+    <button onclick="location.reload()" style="padding:12px 25px;font-size:18px;border:0;border-radius:8px;background:red;color:white;font-weight:bold">PLAY AGAIN</button>
+  </div>
 </body>
 </html>
