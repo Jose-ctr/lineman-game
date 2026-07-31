@@ -7,8 +7,8 @@ body{margin:0;font-family:Arial;background:#87CEEB;overflow:hidden}
 #gameArea{position:relative;width:100vw;height:70vh;background:linear-gradient(#87CEEB,#228B22)}
 #score{position:absolute;top:10px;left:10px;font-size:24px;font-weight:bold;color:#000}
 #mpesa{position:absolute;top:10px;right:10px;font-size:16px;font-weight:bold;color:#E60000;background:#fff;padding:5px 10px;border-radius:5px}
-#gameover{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:40px;color:red;display:none;font-weight:bold}
-#restart{position:absolute;top:60%;left:50%;transform:translate(-50%,-50%);display:none;padding:10px 20px;font-size:18px}
+#gameover{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;font-size:40px;color:red;display:none;font-weight:bold}
+#restart{position:absolute;top:60%;left:50%;transform:translate(-50%,-50%);z-index:10;display:none;padding:10px 20px;font-size:18px}
 .gameBtn{position:absolute;bottom:20px;width:80px;height:80px;font-size:30px;border-radius:50%;border:none;background:#333;color:#fff}
 #up{left:20px;bottom:120px}
 #down{left:20px}
@@ -87,7 +87,7 @@ function loop(){
   requestAnimationFrame(loop)
 }
 function gameOver(){
-  game=0; 
+  game=0;
   document.getElementById('gameover').style.display='block';
   document.getElementById('restart').style.display='block';
 }
@@ -98,7 +98,14 @@ document.getElementById('up').ontouchend=()=>up=0;
 document.getElementById('down').ontouchstart=()=>down=1;
 document.getElementById('down').ontouchend=()=>down=0;
 document.getElementById('jump').onclick=()=>{if(game)vy=-10};
+
 function resetGame(){
+  game=1; s=0; px=100; py=c.height/2; vy=0;
+  poles=[{x:400,gapY:200},{x:400+poleDistance,gapY:250}];
+  document.getElementById('gameover').style.display='none';
+  document.getElementById('restart').style.display='none';
+}
+document.getElementById('restart').onclick=resetGame;
   game=1; s=0; px=100; py=c.height/2; vy=0;
   poles=[{x:400,gapY:200},{x:400+poleDistance,gapY:250}];
   document.getElementById('gameover').style.display='none';
