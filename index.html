@@ -23,7 +23,7 @@ canvas{display:block}
 <script>
 let c=document.getElementById('c'),x=c.getContext('2d');
 c.width=innerWidth;c.height=innerHeight-100;
-let py=300,px=100,s=0,up=0,down=0;
+let py=c.height/2,px=120
 let poles=[300,700,1100,1500,1900].map(v=>({x:v,y:c.height-100}));
 let birds=[500,1000,1500].map((v,i)=>({x:v,y:200+i*50}));
 
