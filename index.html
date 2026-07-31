@@ -2,21 +2,20 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lineman Mobile</title>
+<title>Lineman LOCAL 2P</title>
 <style>
-body{background:#000;color:#fff;text-align:center;margin:0;padding:10px;font-family:Arial}
-h1{color:#0f0;font-size:20px;margin:5px}
-canvas{background:#111;border:2px solid #0f0;display:block;margin:5px auto; width:95%; height:300px}
-button{padding:12px 18px;margin:3px;font-size:16px;border:none;border-radius:8px;font-weight:bold}
-#draw{background:orange;color:#000;width:160px;height:60px;font-size:22px}
-.controls button{width:60px;height:60px;background:#333;color:#fff;font-size:24px}
-#status{color:#0f0;margin:5px}
+body{background:#000;color:#0f0;text-align:center;margin:0;padding:10px;font-family:Arial}
+h1{margin:5px;font-size:24px}
+canvas{background:#000;border:2px solid #0f0;display:block;margin:10px auto}
+button{padding:14px 20px;margin:4px;font-size:18px;border:none;border-radius:8px;font-weight:bold}
+#draw{background:orange;color:#000;width:180px;height:65px;font-size:24px}
+.controls button{width:65px;height:65px;background:#222;color:#fff;font-size:26px}
 </style>
 </head>
 <body>
 <h1>LINEMAN</h1>
-<div id="status">Room: LOCAL - 2 Players</div>
-<canvas id="c"></canvas>
+<div>Room: LOCAL - 2 Players</div>
+<canvas id="c" width="340" height="280"></canvas>
 
 <div class="controls">
 <button id="up">↑</button><br>
@@ -28,38 +27,43 @@ button{padding:12px 18px;margin:3px;font-size:16px;border:none;border-radius:8px
 <button id="reset">RESET</button>
 
 <script>
-const c=document.getElementById('c');
-c.width=350; c.height=300; // ndogo kwa simu
-const ctx=c.getContext('2d');
-let p1={x:80,y:150,col:'cyan',alive:true,line:[],drawing:false};
-let p2={x:270,y:150,col:'orange',alive:true,line:[],drawing:false};
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+let p1={x:90,y:140,col:'cyan',alive:true,line:[],drawing:false};
+let p2={x:250,y:140,col:'orange',alive:true,line:[],drawing:false};
 let keys={};
 
-function draw(){
-ctx.fillStyle='#111';ctx.fillRect(0,0,350,300);
+function drawGame(){
+ctx.fillStyle='#000';ctx.fillRect(0,0,340,280);
 [p1,p2].forEach(p=>{
 if(!p.alive)return;
-ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(p.x,p.y,6,0,6.28);ctx.fill();
-ctx.strokeStyle=p.col;ctx.lineWidth=2;
+ctx.fillStyle=p.col;
+ctx.beginPath();ctx.arc(p.x,p.y,7,0,Math.PI*2);ctx.fill(); // RAIA
+ctx.strokeStyle=p.col;ctx.lineWidth=3;
 p.line.forEach(seg=>{ctx.beginPath();ctx.moveTo(seg[0].x,seg[0].y);seg.forEach(pt=>ctx.lineTo(pt.x,pt.y));ctx.stroke();})
 });
 }
 function move(p,dx,dy){
 if(!p.alive)return;
 p.x+=dx;p.y+=dy;
-if(p.x<0)p.x=0;if(p.x>350)p.x=350;if(p.y<0)p.y=0;if(p.y>300)p.y=300;
-if(p.drawing){if(p.line.length==0)p.line.push([{x:p.x,y:p.y}]);p.line[p.line.length-1].push({x:p.x,y:p.y});}
+p.x=Math.max(0,Math.min(340,p.x));p.y=Math.max(0,Math.min(280,p.y));
+if(p.drawing){
+if(p.line.length==0)p.line.push([{x:p.x,y:p.y}]);
+p.line[p.line.length-1].push({x:p.x,y:p.y});
 }
-function check(){
-[p1,p2].forEach(me=>[p1,p2].forEach(other=>{if(me!=other)other.line.flat().forEach(pt=>{if(Math.abs(me.x-pt.x)<5&&Math.abs(me.y-pt.y)<5)me.alive=false;}))})}
+}
+function checkCollision(){
+[p1,p2].forEach(me=>[p1,p2].forEach(other=>{
+if(me==other)return;
+other.line.flat().forEach(pt=>{if(Math.abs(me.x-pt.x)<6&&Math.abs(me.y-pt.y)<6)me.alive=false;})
+}))}
 setInterval(()=>{
-if(keys['w'])move(p1,0,-2);if(keys['s'])move(p1,0,2);if(keys['a'])move(p1,-2,0);if(keys['d'])move(p1,2,0);
-if(keys['ArrowUp'])move(p2,0,-2);if(keys['ArrowDown'])move(p2,0,2);if(keys['ArrowLeft'])move(p2,-2,0);if(keys['ArrowRight'])move(p2,2,0);
-check();draw();
-},40);
+if(keys['w'])move(p1,0,-2.5);if(keys['s'])move(p1,0,2.5);if(keys['a'])move(p1,-2.5,0);if(keys['d'])move(p1,2.5,0);
+if(keys['ArrowUp'])move(p2,0,-2.5);if(keys['ArrowDown'])move(p2,0,2.5);if(keys['ArrowLeft'])move(p2,-2.5,0);if(keys['ArrowRight'])move(p2,2.5,0);
+checkCollision();drawGame();
+},33);
 
-document.addEventListener('keydown',e=>{keys[e.key]=true;if(e.key==' ')p1.drawing=true;});
-document.addEventListener('keyup',e=>{keys[e.key]=false;if(e.key==' ')p1.drawing=false;});
+window.addEventListener('keydown',e=>{keys[e.key]=true;if(e.key==' ')p1.drawing=true;if(e.key=='Shift')p2.drawing=true;});
+window.addEventListener('keyup',e=>{keys[e.key]=false;if(e.key==' ')p1.drawing=false;if(e.key=='Shift')p2.drawing=false;});
 
 document.getElementById('draw').ontouchstart=()=>p1.drawing=true;
 document.getElementById('draw').ontouchend=()=>p1.drawing=false;
@@ -68,14 +72,8 @@ document.getElementById(id).ontouchstart=()=>keys[id]=true;
 document.getElementById(id).ontouchend=()=>keys[id]=false;
 });
 document.getElementById('reset').onclick=()=>location.reload();
-document.addEventListener('keydown', e => {
-  if(e.code === 'Space') drawing = true;
-  if(e.code === 'ShiftLeft') drawingP2 = true;
-});
-document.addEventListener('keyup', e => {
-  if(e.code === 'Space') drawing = false;
-  if(e.code === 'ShiftLeft') drawingP2 = false;
-});
+drawGame(); // DRAW MARA MOJA MWANZONI
+alert("Player 1: W A S D + SPACE\nPlayer 2: Arrows + SHIFT\nPhone: Shika DRAW + mishale")
 </script>
 </body>
 </html>
