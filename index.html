@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sw">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lineman Online 2 Player</title>
+<title>Lineman Wachezaji 2 Mtandaoni</title>
 <style>
     body { margin:0; background:#111; color:white; font-family:Arial; text-align:center; overflow:hidden; }
-    canvas { background:#000; border:2px solid #444; display:block; margin:10px auto; }
-    #ui { margin-top:10px; }
-    button { padding:10px 20px; font-size:16px; margin:5px; background:#00aaff; border:none; color:white; border-radius:8px; cursor:pointer; }
+    canvas { background:#000; border:2px solid #444; display:block; margin:10px auto; max-width:95vw; }
+    #ui { margin-top:10px; font-size:14px; }
+    button { padding:12px 24px; font-size:16px; margin:5px; background:#00aaff; border:none; color:white; border-radius:8px; cursor:pointer; font-weight:bold; }
     button:hover { background:#0088cc; }
-    #roomCode { font-size:20px; color:#0f0; font-weight:bold; }
+    #roomCode { font-size:22px; color:#0f0; font-weight:bold; margin:10px; }
     #status { margin:10px; font-size:18px; }
-    input { padding:10px; border-radius:5px; border:none; }
+    input { padding:12px; border-radius:5px; border:none; font-size:16px; width:200px; }
 </style>
 <script type="importmap">
 {
@@ -24,23 +24,24 @@
 </script>
 </head>
 <body>
-<h1>⚡ LINEMAN 2 PLAYER ONLINE ⚡</h1>
-<div id="status">Bonyeza "Create Room" au ingiza Code</div>
+<h1>⚡ LINEMAN WACHEZAJI 2 MTANDAONI ⚡</h1>
+<div id="status">Bonyeza "Tengeneza Chumba" au ingiza Nambari</div>
 <div>
-    <button onclick="createRoom()">Create Room</button>
-    <input id="joinInput" placeholder="Weka Room Code">
-    <button onclick="joinRoom()">Join Room</button>
+    <button onclick="createRoom()">Tengeneza Chumba</button>
+    <input id="joinInput" placeholder="Weka Nambari ya Chumba">
+    <button onclick="joinRoom()">Ingia Chumbani</button>
 </div>
 <div id="roomCode"></div>
 <canvas id="gameCanvas" width="800" height="600"></canvas>
 <div id="ui">
-    WASD / Arrow Keys = Sogeza | Space = Funga Line | K = Kata | R = Restart
+    WASD / Mishale = Sogeza | Space = Chora Mstari | K = Futa Mistari Yote
 </div>
 
 <script type="module">
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, set, onValue, update } from "firebase/database";
 
+// CONFIG YAKO YA FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyALO95KtE3U9y8nAxtiVEjvPAx-fQ09srA",
   authDomain: "lineman-game.firebaseapp.com",
@@ -58,7 +59,7 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 let roomId = null;
 let playerId = null;
-let gameState = { players:{}, lines:[], gameOver:false, winner:null };
+let gameState = { players:{}, lines:[] };
 let keys = {};
 
 document.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
@@ -71,12 +72,11 @@ function randomCode() {
 window.createRoom = () => {
     roomId = randomCode();
     playerId = 'p1';
-    document.getElementById('roomCode').innerText = 'Room Code: ' + roomId;
-    document.getElementById('status').innerText = 'Waiting for Player 2...';
+    document.getElementById('roomCode').innerText = 'Nambari ya Chumba: ' + roomId;
+    document.getElementById('status').innerText = 'Tunasubiri Mchezaji wa 2...';
     set(ref(db, 'rooms/' + roomId), {
-        players: { p1: { x:100, y:300, color:'cyan', score:0, alive:true, drawing:false } },
-        lines: [],
-        gameOver: false
+        players: { p1: { x:100, y:300, color:'cyan', alive:true } },
+        lines: []
     });
     listenRoom();
 }
@@ -84,9 +84,9 @@ window.createRoom = () => {
 window.joinRoom = () => {
     roomId = document.getElementById('joinInput').value.toUpperCase();
     playerId = 'p2';
-    document.getElementById('roomCode').innerText = 'Room Code: ' + roomId;
-    set(ref(db, 'rooms/' + roomId + '/players/p2'), { x:700, y:300, color:'orange', score:0, alive:true, drawing:false });
-    document.getElementById('status').innerText = 'Game Started!';
+    document.getElementById('roomCode').innerText = 'Nambari ya Chumba: ' + roomId;
+    set(ref(db, 'rooms/' + roomId + '/players/p2'), { x:700, y:300, color:'orange', alive:true });
+    document.getElementById('status').innerText = 'Mchezo Umeanza!';
     listenRoom();
 }
 
@@ -98,22 +98,21 @@ function listenRoom() {
 }
 
 function updatePlayer() {
-    if(!roomId ||!playerId ||!gameState.players[playerId]) return;
+    if(!roomId ||!playerId ||!gameState.players ||!gameState.players[playerId]) return;
     let p = gameState.players[playerId];
     if(!p.alive) return;
 
-    if(keys['w'] || keys['arrowup']) p.y -= 3;
-    if(keys['s'] || keys['arrowdown']) p.y += 3;
-    if(keys['a'] || keys['arrowleft']) p.x -= 3;
-    if(keys['d'] || keys['arrowright']) p.x += 3;
+    if(keys['w'] || keys['arrowup']) p.y -= 4;
+    if(keys['s'] || keys['arrowdown']) p.y += 4;
+    if(keys['a'] || keys['arrowleft']) p.x -= 4;
+    if(keys['d'] || keys['arrowright']) p.x += 4;
     
     p.x = Math.max(0, Math.min(800, p.x));
     p.y = Math.max(0, Math.min(600, p.y));
 
     if(keys[' ']) {
-        p.drawing = true;
         gameState.lines.push({x:p.x, y:p.y, color:p.color});
-    } else { p.drawing = false; }
+    }
     
     if(keys['k']) { gameState.lines = []; }
 
@@ -124,8 +123,14 @@ function updatePlayer() {
 function draw() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0,0,800,600);
-    ctx.lineWidth = 4;
-    gameState.lines.forEach(pt => { ctx.fillStyle = pt.color; ctx.fillRect(pt.x, pt.y, 4, 4); });
+    
+    // Chora mistari
+    gameState.lines.forEach(pt => { 
+        ctx.fillStyle = pt.color; 
+        ctx.fillRect(pt.x-2, pt.y-2, 4, 4); 
+    });
+    
+    // Chora wachezaji
     for(let id in gameState.players){
         let p = gameState.players[id];
         ctx.fillStyle = p.color;
