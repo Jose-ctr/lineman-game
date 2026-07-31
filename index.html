@@ -1,164 +1,140 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lineman Online 2 Player</title>
 <style>
-body{margin:0;font-family:sans-serif;overflow:hidden;background:#87CEEB}
-#gameArea{position:relative;width:100vw;height:70vh;background:#87CEEB}
-#score{position:absolute;top:10px;left:10px;font-size:28px;font-weight:bold;color:#FFFF00;text-shadow:3px 3px 6px #000;z-index:30}
-#rating{position:absolute;top:50px;left:10px;font-size:20px;font-weight:bold;color:#00FF00;text-shadow:2px 2px 4px #000;z-index:30}
-#highscore{position:absolute;top:10px;right:150px;font-size:18px;background:#000;color:#FFD700;padding:5px 12px;border-radius:8px;font-weight:bold;z-index:30}
-#mpesa{position:absolute;top:10px;right:10px;font-size:16px;background:#FFFFFF;padding:5px 10px;border-radius:5px;color:#FF0000;font-weight:bold;z-index:30}
-#gameover{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:none;z-index:40;font-size:40px;color:#FF0000;font-weight:bold;text-shadow:3px 3px 6px #000}
-#restart{position:absolute;top:60%;left:50%;transform:translate(-50%,-50%);display:none;z-index:40;padding:12px 24px;font-size:18px;background:#25D366;color:white;border:none;border-radius:10px}
-.gameBtn{position:absolute;bottom:20px;width:80px;height:80px;border-radius:50%;font-size:30px;background:#333333;color:white;border:2px solid white;opacity:0.9;z-index:30}
-#up{left:20px;bottom:120px}
-#down{left:20px}
-#jump{right:20px}
-canvas{position:absolute;top:0;left:0;background:#87CEEB;z-index:1}
-#chatArea{height:30vh;background:#f1f1f1;display:flex;flex-direction:column}
-.header{background:#075E54;color:#fff;padding:10px;font-weight:bold}
-.chat{flex:1;overflow-y:auto;padding:10px}
-.msg{background:#DCF8C6;padding:8px 12px;border-radius:10px;margin:5px 0}
-.msg.bot{background:#fff}
-.input-area{display:flex;padding:10px;background:#fff}
-#input{flex:1;padding:10px;border:1px solid #ccc;border-radius:20px}
-.input-area button{background:#075E54;color:#fff;border:none;padding:10px;border-radius:50%;margin-left:5px}
-
-#startScreen{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:20;display:flex;flex-direction:column;justify-content:center;align-items:center;color:white;text-align:center}
-#startBtn{padding:15px 30px;font-size:20px;background:#075E54;color:white;border:none;border-radius:10px;margin-top:20px}
-#mpesaBig{font-size:24px;margin:10px 0;color:#25D366;font-weight:bold}
-#thankYou{font-size:14px;margin-top:30px;color:#aaa}
+    body { margin:0; background:#111; color:white; font-family:Arial; text-align:center; overflow:hidden; }
+    canvas { background:#000; border:2px solid #444; display:block; margin:10px auto; }
+    #ui { margin-top:10px; }
+    button { padding:10px 20px; font-size:16px; margin:5px; background:#00aaff; border:none; color:white; border-radius:8px; cursor:pointer; }
+    button:hover { background:#0088cc; }
+    #roomCode { font-size:20px; color:#0f0; font-weight:bold; }
+    #status { margin:10px; font-size:18px; }
+    input { padding:10px; border-radius:5px; border:none; }
 </style>
+<script type="importmap">
+{
+  "imports": {
+    "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
+    "firebase/database": "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"
+  }
+}
+</script>
 </head>
 <body>
-<div id="gameArea">
-<div id="score">SCORE: 0</div>
-<div id="rating">READY</div>
-<div id="highscore">BEST: 0</div>
-<div id="mpesa">M-PESA: 0707649890</div>
-<canvas id="c"></canvas>
-<div id="gameover">GAME OVER</div>
-<button id="restart">SUPPORT THE DEV - PAY 5BOB</button>
-<button class="gameBtn" id="up">↑</button>
-<button class="gameBtn" id="down">↓</button>
-<button class="gameBtn" id="jump">JUMP</button>
-
-<div id="startScreen">
-  <h2>SUPPORT THE DEVELOPER</h2>
-  <p>Send any amount to:</p>
-  <div id="mpesaBig">M-PESA: 0707649890</div>
-  <p>Then tap START</p>
-  <button id="startBtn">START GAME</button>
-  <div id="thankYou">THANK YOU FOR YOUR SUPPORT! 🙏</div>
+<h1>⚡ LINEMAN 2 PLAYER ONLINE ⚡</h1>
+<div id="status">Bonyeza "Create Room" au ingiza Code</div>
+<div>
+    <button onclick="createRoom()">Create Room</button>
+    <input id="joinInput" placeholder="Weka Room Code">
+    <button onclick="joinRoom()">Join Room</button>
 </div>
+<div id="roomCode"></div>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<div id="ui">
+    WASD / Arrow Keys = Sogeza | Space = Funga Line | K = Kata | R = Restart
 </div>
 
-<div id="chatArea">
-  <div class="header">📡 Lineman Bot</div>
-  <div class="chat" id="chat">
-    <div class="msg bot">Yo! Welcome to Mombasa Lineman Game. Tap UP to start flying!</div>
-  </div>
-  <div class="input-area">
-    <input id="input" placeholder="Ask me anything...">
-    <button onclick="send()">➤</button>
-  </div>
-</div>
+<script type="module">
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, set, onValue, update } from "firebase/database";
 
-<script>
-let c=document.getElementById('c'), x=c.getContext('2d');
-c.width=innerWidth; 
-c.height=window.innerHeight * 0.7;
-let px=100,py=c.height/2,vy=0,s=0,up=0,down=0,game=0,high=0;
-let gap=200; let poleDistance=350;
-let poles=[{x:400,gapY:200},{x:400+poleDistance,gapY:250}];
+const firebaseConfig = {
+  apiKey: "AIzaSyALO95KtE3U9y8nAxtiVEjvPAx-fQ09srA",
+  authDomain: "lineman-game.firebaseapp.com",
+  databaseURL: "https://lineman-game-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "lineman-game",
+  storageBucket: "lineman-game.firebasestorage.app",
+  messagingSenderId: "753516093396",
+  appId: "1:753516093396:web:cdc265060cc68ba72f0041"
+};
 
-high = localStorage.getItem('linemanHigh') || 0;
-document.getElementById('highscore').innerText="BEST: "+high;
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-let linemanImg = new Image();
-linemanImg.src = "Lineman.png";
-linemanImg.onerror = function(){ linemanImg = null; }
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let roomId = null;
+let playerId = null;
+let gameState = { players:{}, lines:[], gameOver:false, winner:null };
+let keys = {};
 
-function loop(){
-  if(game){
-    x.clearRect(0,0,c.width,c.height);
+document.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+document.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-    if(up) vy=-8;
-    if(down) vy=8;
-    if(!up && !down) vy+=0.5;
-    py+=vy;
+function randomCode() {
+    return Math.random().toString(36).substring(2, 6).toUpperCase();
+}
 
-    if(linemanImg){
-      x.drawImage(linemanImg, px-25, py-25, 50, 50);
-    }else{
-      x.fillStyle="red";
-      x.beginPath();
-      x.arc(px, py, 25, 0, Math.PI*2);
-      x.fill();
-    }
-
-    poles.forEach(p=>{
-      x.fillStyle="#555";
-      x.fillRect(p.x,0,40,p.gapY-gap/2);
-      x.fillRect(p.x,p.gapY+gap/2,40,c.height);
-      p.x-=5;
-      if(p.x<-40){p.x=400+poleDistance; p.gapY=150+Math.random()*200}
-      if(px> p.x && px< p.x+40 && (py< p.gapY-gap/2 || py> p.gapY+gap/2)){gameOver()}
+window.createRoom = () => {
+    roomId = randomCode();
+    playerId = 'p1';
+    document.getElementById('roomCode').innerText = 'Room Code: ' + roomId;
+    document.getElementById('status').innerText = 'Waiting for Player 2...';
+    set(ref(db, 'rooms/' + roomId), {
+        players: { p1: { x:100, y:300, color:'cyan', score:0, alive:true, drawing:false } },
+        lines: [],
+        gameOver: false
     });
+    listenRoom();
+}
 
-    s++; 
-    document.getElementById('score').innerText="SCORE: "+s;
+window.joinRoom = () => {
+    roomId = document.getElementById('joinInput').value.toUpperCase();
+    playerId = 'p2';
+    document.getElementById('roomCode').innerText = 'Room Code: ' + roomId;
+    set(ref(db, 'rooms/' + roomId + '/players/p2'), { x:700, y:300, color:'orange', score:0, alive:true, drawing:false });
+    document.getElementById('status').innerText = 'Game Started!';
+    listenRoom();
+}
+
+function listenRoom() {
+    onValue(ref(db, 'rooms/' + roomId), (snapshot) => {
+        gameState = snapshot.val();
+        if(gameState) draw();
+    });
+}
+
+function updatePlayer() {
+    if(!roomId ||!playerId ||!gameState.players[playerId]) return;
+    let p = gameState.players[playerId];
+    if(!p.alive) return;
+
+    if(keys['w'] || keys['arrowup']) p.y -= 3;
+    if(keys['s'] || keys['arrowdown']) p.y += 3;
+    if(keys['a'] || keys['arrowleft']) p.x -= 3;
+    if(keys['d'] || keys['arrowright']) p.x += 3;
     
-    // RATING SYSTEM - HII NDIO INDICATION
-    let ratingText = "FAIR";
-    if(s >= 10 && s < 25) ratingText = "GOOD 🔥";
-    else if(s >= 25 && s < 50) ratingText = "EXCELLENT ⚡";
-    else if(s >= 50) ratingText = "LEGENDARY 👑";
-    document.getElementById('rating').innerText = ratingText;
-  }
-  requestAnimationFrame(loop)
+    p.x = Math.max(0, Math.min(800, p.x));
+    p.y = Math.max(0, Math.min(600, p.y));
+
+    if(keys[' ']) {
+        p.drawing = true;
+        gameState.lines.push({x:p.x, y:p.y, color:p.color});
+    } else { p.drawing = false; }
+    
+    if(keys['k']) { gameState.lines = []; }
+
+    update(ref(db, 'rooms/' + roomId + '/players/' + playerId), p);
+    update(ref(db, 'rooms/' + roomId + '/lines'), gameState.lines);
 }
 
-function gameOver(){
-  game=0;
-  if(s > high){
-    high = s;
-    localStorage.setItem('linemanHigh', high);
-    document.getElementById('highscore').innerText="BEST: "+high;
-  }
-  document.getElementById('gameover').style.display='block';
-  document.getElementById('restart').style.display='block';
-  document.getElementById('startScreen').style.display='flex';
+function draw() {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0,0,800,600);
+    ctx.lineWidth = 4;
+    gameState.lines.forEach(pt => { ctx.fillStyle = pt.color; ctx.fillRect(pt.x, pt.y, 4, 4); });
+    for(let id in gameState.players){
+        let p = gameState.players[id];
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 10, 0, Math.PI*2);
+        ctx.fill();
+    }
 }
-
-function resetGame(){
-  game=1; s=0; px=100; py=c.height/2; vy=0;
-  document.getElementById('rating').innerText = "READY"; // Reset
-  poles=[{x:400,gapY:200},{x:400+poleDistance,gapY:250}];
-  document.getElementById('gameover').style.display='none';
-  document.getElementById('restart').style.display='none';
-}
-document.getElementById('restart').onclick=resetGame;
-document.getElementById('startBtn').onclick=()=>{
-  document.getElementById('startScreen').style.display='none';
-  resetGame();
-}
-document.getElementById('up').ontouchstart=()=>up=1;
-document.getElementById('up').ontouchend=()=>up=0;
-document.getElementById('down').ontouchstart=()=>down=1;
-document.getElementById('down').ontouchend=()=>down=0;
-document.getElementById('jump').onclick=()=>{if(game)vy=-10};
-
-function send(){
-  let msg=document.getElementById('input').value;
-  if(msg){
-    document.getElementById('chat').innerHTML += `<div class="msg">${msg}</div>`;
-    document.getElementById('chat').innerHTML += `<div class="msg bot">Asante kwa kucheza! Score yako: ${s}. Support the dev on M-PESA 😄</div>`;
-    document.getElementById('input').value='';
-  }
-}
-loop();
+setInterval(updatePlayer, 1000/60);
 </script>
 </body>
 </html>
