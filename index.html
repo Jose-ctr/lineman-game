@@ -4,23 +4,27 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <style>
 body{margin:0;background:#87CEEB;overflow:hidden;font-family:Arial}
-#score{position:absolute;top:10px;left:10px;font-size:24px;font-weight:bold;color:#fff;text-shadow:2px 2px 0 #000}
-#mpesa{position:absolute;top:10px;right:10px;background:#00A651;color:#fff;padding:8px 12px;border-radius:8px;font-weight:bold}
+#score{position:absolute;top:10px;left:10px;font-size:20px;font-weight:bold;color:#fff;text-shadow:2px 2px 0 #000;z-index:1}
+#mpesa{position:absolute;top:10px;right:10px;background:#00A651;color:#fff;padding:8px 12px;border-radius:8px;font-weight:bold;z-index:2}
 button{position:absolute;bottom:20px;width:80px;height:80px;border-radius:50%;font-size:40px;border:3px solid #fff;background:#2F4F4F;color:#fff}
 #up{left:25%}
 #down{right:25%}
+#restart{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:200px;height:60px;border-radius:20px;font-size:24px;background:#FF0000;display:none}
+#gameover{position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);font-size:48px;color:#FF0000;font-weight:bold;text-shadow:3px 3px 0 #fff;display:none}
 </style>
 </head>
 <body>
 <div id="score">SCORE: 0</div>
 <div id="mpesa">M-PESA: 0707649890</div>
+<div id="gameover">GAME OVER</div>
+<button id="restart">RESTART</button>
 <button id="up">↑</button>
 <button id="down">↓</button>
 <canvas id="c"></canvas>
 <script>
 let c=document.getElementById('c'),x=c.getContext('2d');
 c.width=innerWidth;c.height=innerHeight;
-let px=100,py=c.height/2,s=0,up=0,down=0;
+let px=100,py=c.height/2,s=0,up=0,down=0,gameOver=false;
 let poles=[{x:300},{x:600},{x:900}];
 let birds=[{x:400,y:200},{x:700,y:400},{x:1000,y:300}];
 
@@ -28,42 +32,65 @@ document.getElementById('up').ontouchstart=()=>up=1;
 document.getElementById('up').ontouchend=()=>up=0;
 document.getElementById('down').ontouchstart=()=>down=1;
 document.getElementById('down').ontouchend=()=>down=0;
+document.getElementById('restart').onclick=reset;
+
+function reset(){
+  s=0; py=c.height/2; gameOver=false;
+  poles=[{x:300},{x:600},{x:900}];
+  birds=[{x:400,y:200},{x:700,y:400},{x:1000,y:300}];
+  document.getElementById('gameover').style.display='none';
+  document.getElementById('restart').style.display='none';
+  loop();
+}
+
+function checkCollision(objX,objY,w,h){
+  return px < objX + w && px + 20 > objX && py < objY + h && py + 30 > objY;
+}
 
 function loop(){
-  let speed = Math.min(8, 3 + Math.floor(s/1000)); // max speed 8
+  if(gameOver) return;
+  
+  let speed = Math.min(8, 3 + Math.floor(s/1000));
   x.clearRect(0,0,c.width,c.height);
   
   if(up){py-=5; s = s + 0.1}
   if(down){py+=5}
-  if(py<0)py=0; if(py>c.height-30)py=c.height-30;
+  if(py<0)py=0; if(py>c.height-60)py=c.height-60;
   
   document.getElementById('score').innerText='SCORE: '+Math.floor(s)+' SPEED: '+speed;
 
-  // draw poles
+  // draw poles + check collision
   x.fillStyle='#8B4513';
   poles.forEach(p=>{
     p.x-=speed;
     if(p.x<-50)p.x=c.width+50;
     x.fillRect(p.x,50,10,c.height-50);
+    if(checkCollision(p.x,50,10,c.height-50)) gameOver=true;
   });
 
-  // draw birds
+  // draw birds + check collision
   x.fillStyle='#000';
   birds.forEach(b=>{
     b.x-=(speed+1);
-    if(b.x<-50){b.x=c.width+Math.random()*200;b.y=Math.random()*(c.height-100)+50}
+    if(b.x<-50){b.x=c.width+Math.random()*200;b.y=Math.random()*(c.height-200)+100}
     x.beginPath();x.arc(b.x,b.y,8,0,Math.PI*2);x.fill();
+    let dx=px+10-b.x, dy=py+15-b.y;
+    if(Math.sqrt(dx*dx+dy*dy) < 18) gameOver=true; // bird collision
   });
 
-  // draw LINEMAN - BIGGER AND WITH OUTLINE
-  x.fillStyle='#000'; // black outline
+  // draw LINEMAN
+  x.fillStyle='#000'; 
   x.fillRect(px-2,py-2,24,34);
-  x.fillStyle='#FFD700'; // yellow body
+  x.fillStyle='#FFD700';
   x.fillRect(px,py,20,30);
-  x.fillStyle='#FFD700'; // head
   x.beginPath();x.arc(px+10,py-5,8,0,Math.PI*2);x.fill();
   
-  requestAnimationFrame(loop);
+  if(gameOver){
+    document.getElementById('gameover').style.display='block';
+    document.getElementById('restart').style.display='block';
+  } else {
+    requestAnimationFrame(loop);
+  }
 }
 loop();
 </script>
