@@ -61,7 +61,7 @@ document.getElementById('up').ontouchend=()=>up=0;
 document.getElementById('down').ontouchstart=()=>down=1;
 document.getElementById('down').ontouchend=()=>down=0;
 
-  let speed = 3 + Math.floor(s/1000);
+  let speed = Math.min(8, 3 + Math.floor(s/1000)); // max speed 8
 function loop(){
 x.clearRect(0,0,c.width,c.height);
 if(up){py-=5; s = s + 0.1}
