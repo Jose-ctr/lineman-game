@@ -35,6 +35,74 @@
       font-size: 16px;
       cursor: pointer;
     }
+  .arrow { width: 50px; height: 50px; font-size: 20px; }
+    #p1 { background: #1f6feb; }
+    #p2 { background: #f85149; }
+  </style>
+</head>
+<body>
+  <h2>⚡ LINEMAN 2P WORKING ⚡</h2>
+
+  <canvas id="game" width="340" height="280"></canvas>
+
+  <div class="controls">
+    <button class="arrow" data-dir="left">⬅️</button>
+    <button class="arrow" data-dir="right">➡️</button>
+    <button class="arrow" data-dir="up">⬆️</button>
+    <button class="arrow" data-dir="down">⬇️</button>
+    <br>
+    <button id="p1">Player 1</button>
+    <button id="p2">Player 2</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+
+    let currentPlayer = 1;
+    let moveX = 0, moveY = 0;
+
+    let player1 = { x: 50, y: 50, color: 'blue', line: [], alive: true, drawing: true };
+    let player2 = { x: 290, y: 230, color: 'red', line: [], alive: true, drawing: true };
+
+    function update() {
+      let p = currentPlayer === 1? player1 : player2;
+      if (!p.alive) return;
+
+      p.x += moveX;
+      p.y += moveY;
+      p.x = Math.max(8, Math.min(332, p.x));
+      p.y = Math.max(8, Math.min(272, p.y));
+
+      if (p.drawing) {
+        if (p.line.length === 0) p.line.push([{x: p.x, y: p.y}]);
+        p.line[p.line.length - 1].push({x: p.x, y: p.y});
+      }
+
+      [player1, player2].forEach(me => {
+        [player1, player2].forEach(other => {
+          if (me!== other) {
+            other.line.flat().forEach(pt => {
+              if (Math.abs(me.x - pt.x) < 8 && Math.abs(me.y - pt.y) < 8) {
+                me.alive = false;
+              }
+            });
+          }
+        });
+      });
+
+      draw();
+      requestAnimationFrame(update);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, 340, 280);
+      [player1, player2].forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x
+      font-size: 16px;
+      cursor: pointer;
+    }
     .arrow { width: 50px; height: 50px; font-size: 20px; }
     #p1 { background: #1f6feb; }
     #p2 { background: #f85149; }
